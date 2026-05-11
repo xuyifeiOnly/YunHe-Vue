@@ -49,7 +49,7 @@ const queryParams = ref<LogininforQueryParams>({ pageNo: 1, pageSize: 10 })
 const items: ProSearchItem[] = [
   { type: 'input', prop: 'ip', label: '登录地址' },
   { type: 'input', prop: 'username', label: '登录账号' },
-  { type: 'select', prop: 'status', label: '登录状态', options: sys_common_status.value },
+  { type: 'select', prop: 'status', label: '登录状态', options: sys_common_status },
 ]
 const columns: ProTableColumn<LogininfoEntity>[] = [
   { align: 'center', type: 'selection' },
@@ -59,9 +59,9 @@ const columns: ProTableColumn<LogininfoEntity>[] = [
   { align: 'center', prop: 'ip', label: '地址', showOverflowTooltip: true, minWidth: 140 },
   { align: 'center', prop: 'location', label: '登录地点', showOverflowTooltip: true, minWidth: 150 },
   { align: 'center', prop: 'os', label: '操作系统', showOverflowTooltip: true, minWidth: 150 },
-  { align: 'center', prop: 'browser', label: '浏览器', showOverflowTooltip: true, width: 160 },
+  { align: 'center', prop: 'browser', label: '浏览器', showOverflowTooltip: true, width: 180 },
   { align: 'center', prop: 'status', label: '登录状态', slot: 'status', width: 90 },
-  { align: 'center', prop: 'message', label: '描述', showOverflowTooltip: true, width: 200 },
+  { align: 'center', prop: 'message', label: '描述', showOverflowTooltip: true, width: 220 },
   { align: 'center', prop: 'loginTime', label: '登录时间', width: 170 },
   { align: 'center', slot: 'action', label: '操作', fixed: 'right', width: 80 },
 ]

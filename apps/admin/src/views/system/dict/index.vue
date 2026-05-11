@@ -82,7 +82,7 @@ const dialogWidth = computed(() => (appStore.isDesktop ? '600px' : 'calc(100% - 
 const items: ProSearchItem[] = [
   { type: 'input', prop: 'dictName', label: '字典名称' },
   { type: 'input', prop: 'dictType', label: '字典类型' },
-  { type: 'select', prop: 'status', label: '字典状态', options: sys_normal_disable.value },
+  { type: 'select', prop: 'status', label: '字典状态', options: sys_normal_disable },
 ]
 const columns: ProTableColumn<DictTypeEntity>[] = [
   { align: 'center', type: 'selection' },

@@ -10,7 +10,7 @@
               </template>
               <template v-else-if="item.type === 'select'">
                 <el-select v-model="model[item.prop]" :placeholder="getPlaceholder(item)" clearable>
-                  <el-option v-for="opt in item.options" :key="opt.value" :label="opt.label" :value="opt.value" />
+                  <el-option v-for="opt in toValue(item.options)" :key="opt.value" :label="opt.label" :value="opt.value" />
                 </el-select>
               </template>
               <template v-else-if="item.type === 'date'">
@@ -43,6 +43,7 @@
 
 <script setup lang="ts">
 defineOptions({ name: 'ProSearch' })
+import { toValue } from 'vue'
 import type { ProSearchItem, ProSearchProps } from './types'
 
 const props = withDefaults(defineProps<ProSearchProps>(), {

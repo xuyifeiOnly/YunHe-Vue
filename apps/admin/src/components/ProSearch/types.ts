@@ -1,3 +1,5 @@
+import type { Ref } from 'vue'
+
 export interface ProSearchProps {
   items: ProSearchItem[]
   /** 每列的宽度（基于 24 格布局） */
@@ -14,6 +16,8 @@ export interface ProSearchProps {
   resetButtonText?: string
 }
 
+type ProSearchOption = { label: string; value: any; [key: string]: any }
+
 export interface ProSearchItem {
   /** 表单项的标签文本或自定义渲染函数 */
   label: string
@@ -24,7 +28,7 @@ export interface ProSearchItem {
   /** 表单项的占位符文本 */
   placeholder?: string
   /** 选项数据，用于 select、checkbox-group、radio-group 等 */
-  options?: Array<{ label: string; value: any; [key: string]: any }>
+  options?: ProSearchOption[] | Ref<ProSearchOption[]>
   /** 是否隐藏该表单项 */
   hidden?: boolean
 }

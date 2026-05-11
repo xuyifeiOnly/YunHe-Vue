@@ -62,7 +62,7 @@ const items: ProSearchItem[] = [
   { type: 'input', prop: 'title', label: '系统模块' },
   { type: 'input', prop: 'username', label: '操作人员' },
   { type: 'input', prop: 'ip', label: '操作地址' },
-  { type: 'select', prop: 'status', label: '操作状态', options: sys_common_status.value },
+  { type: 'select', prop: 'status', label: '操作状态', options: sys_common_status },
 ]
 const columns: ProTableColumn<OperLogEntity>[] = [
   { align: 'center', type: 'selection' },

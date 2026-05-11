@@ -53,7 +53,7 @@ const userDialogRef = useTemplateRef('userDialogRef')
 const items: ProSearchItem[] = [
   { type: 'input', prop: 'username', label: '用户账号' },
   { type: 'input', prop: 'phone', label: '手机号码' },
-  { type: 'select', prop: 'status', label: '用户状态', options: sys_normal_disable.value },
+  { type: 'select', prop: 'status', label: '用户状态', options: sys_normal_disable },
 ]
 const columns: ProTableColumn<UserEntity>[] = [
   { align: 'center', type: 'selection' },

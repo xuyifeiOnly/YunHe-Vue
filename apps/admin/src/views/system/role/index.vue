@@ -57,7 +57,7 @@ const authPermissionRef = useTemplateRef('authPermissionRef')
 const items: ProSearchItem[] = [
   { prop: 'roleCode', label: '角色编码', type: 'input' },
   { prop: 'roleName', label: '角色名称', type: 'input' },
-  { prop: 'status', label: '角色状态', type: 'select', options: sys_normal_disable.value },
+  { prop: 'status', label: '角色状态', type: 'select', options: sys_normal_disable },
 ]
 const columns: ProTableColumn<RoleEntity>[] = [
   { align: 'center', type: 'selection' },

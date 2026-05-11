@@ -66,7 +66,7 @@ const list = ref<MenuTreeEntity[]>([])
 
 const items: ProSearchItem[] = [
   { type: 'input', prop: 'menuName', label: '菜单名称' },
-  { type: 'select', prop: 'status', label: '菜单状态', options: sys_normal_disable.value },
+  { type: 'select', prop: 'status', label: '菜单状态', options: sys_normal_disable },
 ]
 /** 表格列配置 */
 const columns: ProTableColumn<MenuEntity>[] = [

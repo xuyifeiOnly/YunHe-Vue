@@ -13,7 +13,7 @@
   background-color: #ccd3cc;
 }
 html[data-device='mobile'] .app-content {
-  --length: 400px;
+  --length: 91.6vw;
 }
 .taichi {
   position: relative;

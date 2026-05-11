@@ -65,7 +65,7 @@ const jobDialogRef = useTemplateRef('jobDialogRef')
 const items: ProSearchItem[] = [
   { type: 'input', prop: 'jobName', label: '任务名称' },
   { type: 'input', prop: 'jobGroup', label: '任务组名' },
-  { type: 'select', prop: 'status', label: '任务状态', options: sys_job_status.value },
+  { type: 'select', prop: 'status', label: '任务状态', options: sys_job_status },
 ]
 const columns: ProTableColumn<JobEntity>[] = [
   { align: 'center', type: 'selection' },

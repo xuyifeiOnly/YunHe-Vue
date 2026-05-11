@@ -113,7 +113,7 @@ const listClassOptions = [
 const items: ProSearchItem[] = [
   { label: '字典类型', prop: 'dictType', type: 'select' },
   { label: '字典标签', prop: 'dictLabel', type: 'input' },
-  { label: '字典状态', prop: 'status', type: 'select', options: sys_normal_disable.value },
+  { label: '字典状态', prop: 'status', type: 'select', options: sys_normal_disable },
 ]
 const columns: ProTableColumn<DictDataEntity>[] = [
   { align: 'center', type: 'selection' },
