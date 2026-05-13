@@ -2,7 +2,7 @@
 node_modules/
 dist/
 *.tsbuildinfo
-
+apps/server/uploads
 dist
 node_modules
 
