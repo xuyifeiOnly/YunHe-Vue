@@ -7,6 +7,8 @@ export const useTagsViewStore = defineStore('tags-view', () => {
   const cachedViews = ref<string[]>(getCachedViews())
 
   function addVisitedView(view: TagView) {
+    // temp 临时处理，后续改动菜单实体
+    if (view.path?.includes('analysis')) return
     const index = visitedViews.value.findIndex((v) => v.path === view.path)
     if (index !== -1) {
       // 防止 query 参数丢失

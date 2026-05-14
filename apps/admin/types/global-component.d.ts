@@ -12,5 +12,6 @@ declare module 'vue' {
     ProTable: (typeof import('../src/components/ProTable/index.vue'))['default']
     ProSearch: (typeof import('../src/components/ProSearch/index.vue'))['default']
     ProPagination: (typeof import('../src/components/ProPagination/index.vue'))['default']
+    ScreenAdapter: (typeof import('../src/components/ScreenAdapter/index.vue'))['default']
   }
 }

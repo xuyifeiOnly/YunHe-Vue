@@ -24,3 +24,14 @@ export function getTimeGreeting(date?: Date) {
   if (hour >= 14 && hour < 18) return '下午好'
   return '晚上好'
 }
+
+/**
+ * 获取今天是星期几（中文：星期一、星期二...星期日）
+ * @param date - 可选，指定日期，默认当前时间
+ * @returns 星期几的中文文本
+ */
+export function getWeekDay(date: dayjs.ConfigType = dayjs()) {
+  const weekMap = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+  const day = dayjs(date).day()
+  return weekMap[day]
+}

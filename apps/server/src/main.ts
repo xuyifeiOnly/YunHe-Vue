@@ -21,7 +21,7 @@ async function bootstrap() {
   const globalPrefix = configService.get<string>(ConfigConstant.SERVER_GLOBAL_PREFIX, '')
 
   // 配置静态资源托管，将 uploads 目录下的文件托管到 /uploads/ 路径下
-  app.useStaticAssets(resolve(process.cwd(), 'uploads'), { prefix: '/uploads/' }) // 托管 uploads 目录
+  app.useStaticAssets(resolve(__dirname, '../uploads'), { prefix: '/uploads/' }) // 托管 uploads 目录
 
   // 设置全局路由前缀，所有接口都必须在该前缀下访问
   app.setGlobalPrefix(globalPrefix)

@@ -40,6 +40,10 @@ const props = defineProps({
 
 const onlyOneChild = ref<OneChild>({ path: '' })
 
+function stripInvisibleChars(value: string): string {
+  return value.replace(/[\u200B-\u200D\uFEFF]/g, '')
+}
+
 function hasOneShowingChild(children: RouteRecordRaw[] = [], parent: RouteRecordRaw): boolean {
   const showingChildren = children.filter((item) => {
     if (item.meta?.hidden) {
@@ -69,18 +73,26 @@ function hasTitle(title?: string): string {
 }
 
 function resolvePath(routePath: string): string {
+  routePath = stripInvisibleChars(routePath)
   if (isExternal(routePath)) return routePath
-  if (isExternal(props.basePath)) return props.basePath
-  return normalizePath(props.basePath + '/' + routePath)
+  const basePath = stripInvisibleChars(props.basePath)
+  if (isExternal(basePath)) return basePath
+  return normalizePath(basePath + '/' + routePath)
 }
 
 function normalizePath(path: string): string {
+  path = stripInvisibleChars(path)
   return path ? path.replace(/\/+/g, '/').replace(/\/$/, '') : path
 }
 
+/** 处理菜单项点击事件，根据路径打开新窗口或跳转路由。 */
 function handleMenuItemClick(item: OneChild) {
-  const path = resolvePath(item.path)
+  const path: string = stripInvisibleChars(resolvePath(item.path))
   if (isExternal(path)) return window.open(path, '_blank', 'noopener')
+  if (path.includes('analysis')) {
+    const href = router.resolve(path).href
+    return window.open(href, '_blank', 'noopener')
+  }
   router.push(path)
 }
 </script>

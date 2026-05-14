@@ -5,7 +5,7 @@ dist/
 apps/server/uploads
 dist
 node_modules
-
+apps/server/uploads
 # 其他包管理器锁文件（本项目用 pnpm，这些都可以忽略）
 package-lock.json
 yarn.lock

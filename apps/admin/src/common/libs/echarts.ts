@@ -5,9 +5,9 @@ import { CanvasRenderer } from 'echarts/renderers'
 // 标签自动布局、全局过渡动画等特性
 import { UniversalTransition } from 'echarts/features'
 // 引入项目中使用到的图表，图表后缀都为 Chart
-import { BarChart, BoxplotChart, LineChart, PieChart, RadarChart, GaugeChart, ScatterChart, CandlestickChart } from 'echarts/charts'
+import { BarChart, BoxplotChart, LineChart, PieChart, RadarChart, GaugeChart, ScatterChart, CandlestickChart, MapChart, EffectScatterChart, LinesChart } from 'echarts/charts'
 // 引入标题，提示框，直角坐标系，数据集，内置数据转换器组件，组件后缀都为 Component
-import { GraphicComponent, GridComponent, LegendComponent, PolarComponent, TitleComponent, TooltipComponent } from 'echarts/components'
+import { GraphicComponent, GridComponent, LegendComponent, PolarComponent, TitleComponent, TooltipComponent, GeoComponent } from 'echarts/components'
 
 // 注册必须的组件
 echarts.use([
@@ -27,6 +27,10 @@ echarts.use([
   UniversalTransition,
   RadarChart,
   PolarComponent,
+  MapChart,
+  GeoComponent,
+  EffectScatterChart,
+  LinesChart,
 ])
 
 export default { ...echarts }
