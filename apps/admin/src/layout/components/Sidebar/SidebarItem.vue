@@ -78,9 +78,14 @@ function normalizePath(path: string): string {
   return path ? path.replace(/\/+/g, '/').replace(/\/$/, '') : path
 }
 
+/** 处理菜单项点击事件，根据路径打开新窗口或跳转路由。 */
 function handleMenuItemClick(item: OneChild) {
-  const path = resolvePath(item.path)
+  const path: string = resolvePath(item.path)
   if (isExternal(path)) return window.open(path, '_blank', 'noopener')
+  if (path.includes('analysis')) {
+    const href = router.resolve(path).href
+    return window.open(href, '_blank', 'noopener')
+  }
   router.push(path)
 }
 </script>

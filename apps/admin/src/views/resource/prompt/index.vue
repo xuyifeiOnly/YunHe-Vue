@@ -41,7 +41,7 @@
           <el-radio-group v-model="form.status" :options="sys_normal_disable" />
         </el-form-item>
         <el-form-item label="提示词内容" prop="content">
-          <el-input v-model.trim="form.content" type="textarea" placeholder="请输入提示词内容" maxlength="5000" :rows="8" show-word-limit />
+          <el-input v-model.trim="form.content" type="textarea" placeholder="请输入提示词内容" :rows="8" />
         </el-form-item>
         <el-form-item label="提示词备注" prop="remark">
           <el-input v-model.trim="form.remark" type="textarea" placeholder="请输入备注" :rows="3" />

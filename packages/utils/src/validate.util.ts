@@ -3,7 +3,7 @@
  * @param value - 待判断的链接/路径
  * @returns boolean
  */
-export function isExternal(value: unknown): value is string {
+export function isExternal(value: unknown): boolean {
   if (typeof value !== 'string') return false
   const trimmedValue = value.trim()
   if (trimmedValue === '') return false
@@ -16,7 +16,7 @@ export function isExternal(value: unknown): value is string {
  * @param value - 待判断的值
  * @returns boolean
  */
-export function isStringNumber(value: unknown): value is string {
+export function isStringNumber(value: unknown): boolean {
   if (typeof value !== 'string') return false
   const trimmedValue = value.trim()
   if (trimmedValue === '') return false
@@ -28,7 +28,7 @@ export function isStringNumber(value: unknown): value is string {
  * @param value - 待判断的值
  * @returns boolean
  */
-export function isJsonString(value: unknown): value is string {
+export function isJsonString(value: unknown): boolean {
   try {
     if (typeof value !== 'string') return false
     const trimmedValue = value.trim()

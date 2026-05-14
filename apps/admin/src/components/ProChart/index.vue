@@ -42,6 +42,7 @@ function init() {
     chartInstance.dispose()
     chartInstance = null
   }
+  // if (chartDOM.value.clientWidth === 0 || chartDOM.value.clientHeight === 0) return
   // 初始化 ECharts 实例（绑定到指定 DOM 容器）
   chartInstance = echarts.init(chartDOM.value, isDark.value ? 'dark' : 'light') as unknown as EChartsType
   // 若传入的 options 非空，则立即更新图表配置（渲染初始图表）

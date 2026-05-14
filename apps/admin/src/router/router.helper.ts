@@ -1,18 +1,23 @@
-import { CommonConstant, RouterConstant } from '@/common'
+import { router } from '.'
 import Layout from '@/layout/index.vue'
-import InnerLink from '@/components/InnerLink/index.vue'
-import ParentView from '@/components/ParentView/index.vue'
-import type { DefineComponent } from 'vue'
-import { camelCase, upperFirst } from 'lodash-es'
-import type { RouteLocationNormalized, RouteRecordRaw } from 'vue-router'
 import type { MenuEntity } from '@/types'
+import type { DefineComponent } from 'vue'
 import { isExternal } from '@yunhe-vue/utils'
+import { camelCase, upperFirst } from 'lodash-es'
+import InnerLink from '@/components/InnerLink/index.vue'
+import { CommonConstant, RouterConstant } from '@/common'
+import ParentView from '@/components/ParentView/index.vue'
+import type { RouteLocationNormalized, RouteRecordRaw } from 'vue-router'
 
 /** 首先把你需要动态路由的组件地址全部获取 [vue2 中可以直接用拼接的方式，但是 vue3 中必须用这种方式] */
 const views = import.meta.glob<{ default: DefineComponent }>('@/views/**/*.vue', { eager: false }) // 显式声明懒加载（默认）
 
 export function isWhiteList(to: RouteLocationNormalized): boolean {
   return RouterConstant.PATH_WHITE_LIST.includes(to.path)
+}
+
+export function toHome() {
+  router.push({ path: '/' })
 }
 
 /**

@@ -1,6 +1,7 @@
 export * from '@/components/ProTable/types'
 export * from '@/components/ProSearch/types'
 export * from '@/components/Markdown/types'
+export * from '@/components/ScreenAdapter/types'
 
 export * from './api/ai'
 export * from './api/auth'
