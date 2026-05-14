@@ -12,6 +12,10 @@ import type { RouteLocationNormalized, RouteRecordRaw } from 'vue-router'
 /** 首先把你需要动态路由的组件地址全部获取 [vue2 中可以直接用拼接的方式，但是 vue3 中必须用这种方式] */
 const views = import.meta.glob<{ default: DefineComponent }>('@/views/**/*.vue', { eager: false }) // 显式声明懒加载（默认）
 
+function stripInvisibleChars(value: string): string {
+  return value.replace(/[\u200B-\u200D\uFEFF]/g, '')
+}
+
 export function isWhiteList(to: RouteLocationNormalized): boolean {
   return RouterConstant.PATH_WHITE_LIST.includes(to.path)
 }
@@ -26,12 +30,13 @@ export function toHome() {
  * @returns 路由懒加载组件（自动绑定 name）
  */
 export function loadView(componentPath: string) {
+  componentPath = stripInvisibleChars(componentPath)
   if (componentPath === 'Layout') return Layout
   if (componentPath === 'InnerLink') return InnerLink
   if (componentPath === 'ParentView') return ParentView
   for (const path in views) {
     const viewRelativePath = path.split('views/')[1].split('.vue')[0]
-    if (viewRelativePath !== componentPath) continue
+    if (stripInvisibleChars(viewRelativePath) !== componentPath) continue
     const componentName = upperFirst(camelCase(componentPath.replace('index', '')))
     const component = views[path]
     return () => component().then((comp) => ((comp.default.name = componentName), comp))
@@ -40,11 +45,14 @@ export function loadView(componentPath: string) {
 }
 
 export function generateRouteName(menu: MenuEntity) {
-  return menu.component ? upperFirst(camelCase(menu.component.replace('index', ''))) : upperFirst(camelCase(menu.path))
+  const component = menu.component ? stripInvisibleChars(menu.component) : ''
+  const path = stripInvisibleChars(menu.path)
+  return component ? upperFirst(camelCase(component.replace('index', ''))) : upperFirst(camelCase(path))
 }
 export function generateRoutePath(menu: MenuEntity) {
-  if (isExternal(menu.path)) return menu.path
-  return menu.parentId === '0' ? `/${menu.path}` : menu.path
+  const path = stripInvisibleChars(menu.path)
+  if (isExternal(path)) return path
+  return menu.parentId === '0' ? `/${path}` : path
 }
 export function generateRoutes(backRoutes: MenuEntity[], parentId: string = '0') {
   const routes: RouteRecordRaw[] = []
@@ -54,7 +62,7 @@ export function generateRoutes(backRoutes: MenuEntity[], parentId: string = '0')
     route.name = generateRouteName(backRoute)
     route.path = generateRoutePath(backRoute)
     route.redirect = backRoute.parentId === '0' && backRoute.menuType === 'M' ? '/404' : undefined
-    if (backRoute.component) route.component = loadView(backRoute.component)
+    if (backRoute.component) route.component = loadView(stripInvisibleChars(backRoute.component))
     route.meta = {}
     route.meta.hidden = backRoute.visible === CommonConstant.STATUS_DISABLE
     route.meta.keepAlive = backRoute.isCache === CommonConstant.STATUS_NORMAL

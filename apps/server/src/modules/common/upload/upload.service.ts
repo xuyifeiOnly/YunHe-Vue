@@ -10,7 +10,7 @@ import type { RmOptions } from 'node:fs'
 @Injectable()
 export class UploadService {
   /** 文件上传根目录，默认为项目根目录下的 `uploads` 文件夹 */
-  private readonly UPLOAD_DIR_PATH = resolve(process.cwd(), 'uploads')
+  private readonly UPLOAD_DIR_PATH = resolve(__dirname, '../../../../uploads')
 
   /** 单文件上传（≤10MB 直接上传，>10MB 拒绝并提示分片） */
   public async uploadFile(file: ExpressMulterFile) {
@@ -89,7 +89,7 @@ export class UploadService {
   public clearChunk(clearChunkDto: ClearChunkDto) {
     const { fileHash } = clearChunkDto
     // 1. 拼接临时分片目录
-    const tempDir = resolve(process.cwd(), 'uploads', fileHash)
+    const tempDir = resolve(this.UPLOAD_DIR_PATH, fileHash)
     // 2. 目录不存在 → 直接返回
     if (!existsSync(tempDir)) return '分片目录不存在，无需清理'
     // 3. 递归删除目录（安全强制删除）
