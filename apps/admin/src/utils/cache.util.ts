@@ -17,12 +17,17 @@ export class CacheUtil {
    * @returns 缓存值或默认值
    */
   static get<T = any>(key: string, defaultValue: T | null = null): T | null {
-    const jsonStr = localStorage.getItem(key)
-    if (!jsonStr) return defaultValue
-    const data = JSON.parse(jsonStr)
-    if (Date.now() <= data.ttl || data.ttl === -1) return data.value
-    localStorage.removeItem(key)
-    return defaultValue
+    try {
+      const jsonStr = localStorage.getItem(key)
+      if (!jsonStr) return defaultValue
+      const data = JSON.parse(jsonStr)
+      if (Date.now() <= data.ttl || data.ttl === -1) return data.value
+      localStorage.removeItem(key)
+      return defaultValue
+    } catch (error: unknown) {
+      localStorage.removeItem(key)
+      return defaultValue
+    }
   }
 
   /**

@@ -19,14 +19,10 @@ export async function globalRouterBeforeGuard(to: RouteLocationNormalized, from:
   }
 
   // 如果在免登录的白名单中，直接放行
-  if (isWhiteList(to)) {
-    return
-  }
+  if (isWhiteList(to)) return
 
   // 无 Token + 不在白名单 → 重定向到登录页（携带回跳地址）
-  if (!accessToken) {
-    return { path: RouterConstant.LOGIN_PAGE_URL, query: { redirect: to.fullPath } }
-  }
+  if (!accessToken) return { path: RouterConstant.LOGIN_PAGE_URL, query: { redirect: to.fullPath } }
 
   try {
     // 已有角色权限，直接放行
@@ -41,7 +37,7 @@ export async function globalRouterBeforeGuard(to: RouteLocationNormalized, from:
     // 动态路由添加后，重新导航到目标路由（replace: true 避免历史记录）
     return { ...to, replace: true }
   } catch (error: any) {
-    console.error('路由守卫异常: ', error.menu ?? error)
+    console.error('路由守卫异常: ', error.message ?? error)
     await userStore.logout()
     return { path: RouterConstant.LOGIN_PAGE_URL, query: { redirect: to.fullPath }, replace: true }
   }

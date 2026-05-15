@@ -51,7 +51,12 @@ function getPendingKey(config: AxiosRequestConfig) {
   return [method, url, stableStringify(params), stableStringify(data)].join('&')
 }
 
-/** 防重复提交拦截器 */
+/**
+ * 防重复提交拦截器
+ * 对 POST / PUT / DELETE 请求基于 url + method + params + data 生成唯一 key，
+ * 重复请求直接拒绝，防止短时间内多次提交
+ * @param instance Axios 实例
+ */
 export function repeatSubmitInterceptor(instance: AxiosInstance) {
   // 请求拦截
   instance.interceptors.request.use((config) => {
