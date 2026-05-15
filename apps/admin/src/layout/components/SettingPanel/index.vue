@@ -3,6 +3,11 @@
     <div class="setting-container">
       <h3 class="drawer-title">系统布局配置</h3>
 
+      <div class="drawer-item">
+        <span>主题颜色</span>
+        <ThemePicker />
+      </div>
+
       <div class="drawer-item" v-for="(item, index) in items" :key="index">
         <span>{{ item.label }}</span>
         <template v-if="item.type === 'switch'">
@@ -32,6 +37,7 @@
 <script setup lang="ts">
 defineOptions({ name: 'SettingPanel' })
 import type { SystemSetting } from '@/utils'
+import ThemePicker from './ThemePicker.vue'
 
 const settingStore = useSettingStore()
 const { saveSetting, resetSetting } = settingStore
