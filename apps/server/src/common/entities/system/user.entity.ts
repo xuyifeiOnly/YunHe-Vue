@@ -38,6 +38,7 @@ export class UserEntity extends BaseEntity {
   @Column({ name: 'login_time', comment: '最后登录时间', default: null })
   loginTime: string
 
+  // cascade: true 表示你 save(user) 时， user.roles 里如果放了“新建的 Role 实体对象”，TypeORM 允许级联保存（实际项目里通常会更谨慎使用，但这里只解释含义）。
   @ManyToMany(() => RoleEntity, (role) => role.users, { cascade: true })
   @JoinTable({ name: 'sys_user_role', joinColumn: { name: 'user_id', referencedColumnName: 'id' }, inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' } })
   roles: RoleEntity[]

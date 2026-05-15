@@ -2,6 +2,7 @@ import { Reflector } from '@nestjs/core'
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
 import { RedisService } from '@/shared/redis.service'
+import { UserContext } from '../context/user.context'
 import { RedisConstant, CommonConstant, DecoratorConstant, BusinessException } from '@/common'
 import { Injectable, CanActivate, ExecutionContext, HttpStatus, Logger } from '@nestjs/common'
 
@@ -18,7 +19,6 @@ export class JwtAuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<ExpressRequest>()
-
     // 放行公开接口
     const isPublic = this.reflector.getAllAndOverride<boolean>(DecoratorConstant.PUBLIC, [context.getHandler(), context.getClass()]) ?? false
     if (isPublic) return true
@@ -48,8 +48,9 @@ export class JwtAuthGuard implements CanActivate {
         this.logger.warn(`Token 续期失败（不影响本次请求）: ${errMsg}`)
       })
 
-      // 将用户信息挂载到请求对象，供后续接口使用
+      // 认证成功后再写入请求对象和异步上下文，保证后续链路拿到真实登录用户
       request[CommonConstant.JWT_PAYLOAD] = payload
+      UserContext.setCurrentUser(payload.username)
 
       return true
     } catch (error: any) {

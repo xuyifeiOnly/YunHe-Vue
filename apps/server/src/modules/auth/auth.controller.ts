@@ -42,4 +42,10 @@ export class AuthController {
     const token = authorization.split(' ')[1]
     return this.authService.logout(token)
   }
+  /**测试接口 */
+  @Get('test')
+  @Public()
+  public test() {
+    return 'test'
+  }
 }
