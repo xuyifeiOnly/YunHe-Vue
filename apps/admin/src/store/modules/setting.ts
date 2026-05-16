@@ -1,6 +1,7 @@
-import { defaultSettings } from '@/settings'
-import { getSystemSetting, removeSystemSetting, setSystemSetting, TipModal, type SystemSetting } from '@/utils'
 import { merge } from 'lodash-es'
+import { defaultSettings } from '@/settings'
+import { tint, shade } from '@yunhe-vue/utils'
+import { getSystemSetting, removeSystemSetting, setSystemSetting, TipModal, type SystemSetting } from '@/utils'
 
 export const useSettingStore = defineStore('setting', () => {
   const state = reactive<SystemSetting>(merge({}, defaultSettings, getSystemSetting()))
@@ -23,5 +24,22 @@ export const useSettingStore = defineStore('setting', () => {
     setTimeout(() => window.location.reload(), 1500)
   }
 
-  return { ...toRefs(state), showSetting, saveSetting, resetSetting }
+  function setPrimaryColor(color: string = state.primaryColor) {
+    const colors: Record<string, string> = {
+      primary: color,
+      'primary-light-3': tint(color, 0.3),
+      'primary-light-5': tint(color, 0.5),
+      'primary-light-7': tint(color, 0.7),
+      'primary-light-8': tint(color, 0.8),
+      'primary-light-9': tint(color, 0.9),
+      'primary-dark-2': shade(color, 0.2),
+    }
+    for (const key in colors) {
+      document.documentElement.style.setProperty(`--el-color-${key}`, colors[key])
+    }
+  }
+
+  if (state.primaryColor !== defaultSettings.primaryColor) setPrimaryColor(state.primaryColor)
+
+  return { ...toRefs(state), showSetting, saveSetting, resetSetting, setPrimaryColor }
 })

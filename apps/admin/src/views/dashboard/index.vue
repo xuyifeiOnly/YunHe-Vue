@@ -9,36 +9,6 @@
       </el-text>
     </el-card>
 
-    <el-card>
-      <template #header>技术选型</template>
-      <div class="tech-stack">
-        <div class="tech-section">
-          <h3 class="tech-section__title">通用技术</h3>
-          <div class="tech-cards">
-            <a v-for="tech in techs.common" :key="tech.name" :href="tech.url" target="_blank" class="tech-card tech-card--common">
-              <span class="tech-card__name">{{ tech.name }}</span>
-            </a>
-          </div>
-        </div>
-        <div class="tech-section">
-          <h3 class="tech-section__title">前端技术</h3>
-          <div class="tech-cards">
-            <a v-for="tech in techs.frontend" :key="tech.name" :href="tech.url" target="_blank" class="tech-card tech-card--frontend">
-              <span class="tech-card__name">{{ tech.name }}</span>
-            </a>
-          </div>
-        </div>
-        <div class="tech-section">
-          <h3 class="tech-section__title">后端技术</h3>
-          <div class="tech-cards">
-            <a v-for="tech in techs.backend" :key="tech.name" :href="tech.url" target="_blank" class="tech-card tech-card--backend">
-              <span class="tech-card__name">{{ tech.name }}</span>
-            </a>
-          </div>
-        </div>
-      </div>
-    </el-card>
-
     <el-row class="my-16px" :gutter="16">
       <el-col :span="12" :xs="24">
         <el-card>
@@ -71,7 +41,6 @@
 
 <script setup lang="ts">
 defineOptions({ name: 'Dashboard' })
-import { techs } from './techs'
 import { changelogs } from './changelogs'
 
 const qqGroupList = [

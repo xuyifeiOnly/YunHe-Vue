@@ -27,4 +27,7 @@ export const defaultSettings: SystemSetting = {
 
   /** 主题 */
   theme: 'light',
+
+  /** 主题颜色（styles\element-plus\el-theme-light.scss 中的 primary.base 一致） */
+  primaryColor: '#0077ff',
 }
