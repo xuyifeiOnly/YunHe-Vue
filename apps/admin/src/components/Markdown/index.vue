@@ -1,11 +1,11 @@
 <template>
   <div class="markdown-editor">
-    <MdEditor ref="editorRef" :readOnly :preview :theme v-model="content" :maxLength :toolbars-exclude="toolbarsEExclude" @save="handleSave" :placeholder />
+    <MdEditor ref="editorRef" :read-only="readOnly" :max-length="maxLength" :preview="preview" :theme v-model="content" :toolbars-exclude="toolbarsEExclude" @save="handleSave" />
   </div>
 </template>
 
 <script setup lang="ts">
-defineOptions({ name: 'Markdown', inheritAttrs: false }) // https://imzbf.github.io/md-editor-v3/en-US
+defineOptions({ name: 'Markdown' }) // https://imzbf.github.io/md-editor-v3/zh-CN
 import 'md-editor-v3/lib/style.css'
 import { linkDownload } from '@/utils'
 import type { MarkdownProps } from './types'
@@ -13,17 +13,15 @@ import { MdEditor, type ToolbarNames } from 'md-editor-v3'
 
 const settingStore = useSettingStore()
 
-// const content = defineModel({ type: String, default: '' })
-const content = ref('')
+const content = defineModel({ type: String, default: '' })
 
 const props = withDefaults(defineProps<MarkdownProps>(), {
   placeholder: '请输入内容',
   preview: false,
   readOnly: false,
-  maxLength: 0,
+  maxLength: 10000,
 })
 
-// const editorRef = useTemplateRef('editorRef')
 const theme = computed(() => (settingStore.theme === 'dark' ? 'dark' : 'light'))
 
 /** 排除的工具栏 */
@@ -48,8 +46,7 @@ onMounted(() => {})
   --md-color: var(--el-text-color-primary);
   --md-border-color: var(--el-border-color);
   width: 100%;
-  height: auto;
-  min-height: 20em;
+  height: 100%;
   font-family: var(--el-font-family);
 }
 </style>

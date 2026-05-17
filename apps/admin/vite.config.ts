@@ -54,10 +54,11 @@ export default defineConfig(({ mode }) => {
       viteCompression({
         algorithm: 'gzip', // 使用 gzip 压缩
         ext: '.gz', // 生成的文件扩展名
-        threshold: 10240, // 仅压缩大于 10KB 的文件
+        threshold: 10 * 1024, // 仅压缩大于 10KB 的文件
         deleteOriginFile: false, // 是否删除原始文件
         compressionOptions: { level: 9 }, // 压缩级别，1-9，越高压缩率越大
         filter: /\.(js|css|json|html|ico|svg)(\?.*)?$/i, // 过滤文件类型
+        verbose: false, // 开启详细日志
       }),
       visualizer({
         open: true, //注意这里要设置为true，否则无效
@@ -120,20 +121,14 @@ export default defineConfig(({ mode }) => {
           // codeSplitting: true,
           codeSplitting: {
             groups: [
-              { name: 'shiki-langs', test: /node_modules[\\/]@shikijs[\\/]langs/, priority: 50 },
-              { name: 'shiki-themes', test: /node_modules[\\/]@shikijs[\\/]themes/, priority: 49 },
-              { name: 'shiki-core', test: /node_modules[\\/]@shikijs/, priority: 48 },
-              { name: 'mermaid', test: /node_modules[\\/]mermaid/, priority: 35 },
               { name: 'element-plus', test: /node_modules[\\/]element-plus/, priority: 30 },
-              { name: 'langium', test: /node_modules[\\/]langium/, priority: 22 },
-              { name: 'codemirror', test: /node_modules[\\/](codemirror|@codemirror)/, priority: 35 },
               { name: 'echarts', test: /node_modules[\\/](echarts|zrender)/, priority: 25 },
-              { name: 'cytoscape', test: /node_modules[\\/]cytoscape/, priority: 19 },
-              { name: 'markdown-it', test: /node_modules[\\/]markdown-it/, priority: 18 },
-              { name: 'katex', test: /node_modules[\\/]katex/, priority: 17 },
-              { name: 'vue-vendor', test: /node_modules[\\/](vue|vue-router|pinia)/, priority: 15 },
-              { name: 'utils', test: /node_modules[\\/](dayjs|axios|lodash-es)/, priority: 12 },
-              { name: 'vendor', test: /node_modules/, priority: 10 },
+              { name: 'vue', test: /node_modules[\\/]vue/, priority: 16 },
+              { name: 'pinia', test: /node_modules[\\/]pinia/, priority: 15 },
+              { name: 'vue-router', test: /node_modules[\\/]vue-router/, priority: 14 },
+              { name: 'axios', test: /node_modules[\\/]axios/, priority: 13 },
+              { name: 'dayjs', test: /node_modules[\\/]dayjs/, priority: 12 },
+              { name: 'lodash-es', test: /node_modules[\\/]lodash-es/, priority: 11 },
             ],
           },
           minify: {
@@ -151,6 +146,7 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       // 预构建依赖（将常用第三方依赖提前构建，提升冷启动速度）
       include: [
+        'element-plus/es/components/base/style/index',
         'element-plus/es/components/tree/style/index',
         'element-plus/es/components/tree-select/style/index',
         'element-plus/es/components/popover/style/index',

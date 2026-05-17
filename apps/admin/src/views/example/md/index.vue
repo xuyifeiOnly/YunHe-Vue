@@ -1,9 +1,9 @@
 <template>
-  <div class="app-content h-full">
+  <div class="app-content flex flex-col h-full">
     <div class="markdown-desc">Markdown 编辑器 | 基于 md-editor-v3 实现，支持实时预览、丰富的工具栏配置、深色模式适配及内容导出功能</div>
 
     <div class="editor-wrapper">
-      <Markdown v-model="content" />
+      <Markdown v-model="content" preview />
     </div>
   </div>
 </template>
