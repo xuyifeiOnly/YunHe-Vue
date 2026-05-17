@@ -175,6 +175,8 @@ import { toHome } from '@/router/router.helper'
 import { registerChinaMap } from './register-china-map'
 import { formatTime, getWeekDay } from '@yunhe-vue/utils'
 import { browserData, osData, chinaMapScatterData, chinaFlyLines, systemResourceData, redisCommandData, onlineUserData, loginRecordData } from './mock-data'
+import { CacheConstant } from '@/common'
+import { getSystemSetting } from '@/utils'
 
 // const isFullscreen = ref(false)
 const mapReady = ref(false)
@@ -469,6 +471,14 @@ const kpiCards = [
   { icon: 'Server', label: '运行时间', value: '127 天', trend: '14 时 32 分', trendUp: true },
   { icon: 'Redis', label: 'Redis Key', value: '12,486', trend: '↑ 3.1%', trendUp: true },
 ]
+
+window.addEventListener('storage', async (event) => {
+  console.log('event: ', event.key)
+  if (event.key !== CacheConstant.SYSTEM_SETTING) return
+  const systemSetting = getSystemSetting()
+  const isDark = systemSetting?.theme === 'dark'
+  document.documentElement.classList.toggle('dark', isDark)
+})
 </script>
 
 <style lang="scss" scoped>
