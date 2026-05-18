@@ -34,6 +34,8 @@ export { OperLogEntity } from './entities/monitor/operlog.entity'
 export { LogininforEntity } from './entities/monitor/logininfor.entity'
 export { PromptEntity } from './entities/resource/prompt.entity'
 
+export { GoodsCategoryEntity } from './entities/goods/goods-category.entity'
+
 export { BusinessException } from './exception/business.exception'
 
 export { AllExceptionsFilter } from './filter/all-exception.filter'

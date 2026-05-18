@@ -18,5 +18,6 @@ export * from './api/monitor/server'
 export * from './api/monitor/operlog'
 export * from './api/monitor/online'
 export * from './api/monitor/logininfor'
+export * from './api/goods/goods-category'
 
 export * from './utils/browser.util'

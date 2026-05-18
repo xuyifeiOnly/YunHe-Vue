@@ -13,6 +13,7 @@ import { MiddlewareConsumer, Module, NestModule, ValidationPipe } from '@nestjs/
 import { JwtAuthGuard, ThrottlerLimitGuard, DemoEnvironmentGuard, PermissionAuthGuard, RepeatSubmitGuard, RoleAuthGuard } from '@/common'
 import { ReponseTransformInterceptor, ResponseCacheInterceptor, OperationLogInterceptor } from '@/common'
 import { AiModule } from './modules/ai/ai.module'
+import { GoodsModule } from './modules/goods/goods.module'
 import { ResourceModule } from './modules/resource/resource.module'
 
 @Module({
@@ -26,6 +27,7 @@ import { ResourceModule } from './modules/resource/resource.module'
     SystemModule, // 系统管理模块
     MonitorModule,
     AiModule, // 系统监控模块
+    GoodsModule, // 商品模块
     ResourceModule, // 资源模块
   ],
 
