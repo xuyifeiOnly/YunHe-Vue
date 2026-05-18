@@ -49,32 +49,32 @@ export const STATIC_ROUTE_LIST: RouteRecordRaw[] = [
       },
     ],
   },
-  {
-    path: '/system/dict/data',
-    component: Layout,
-    meta: { hidden: true },
-    children: [
-      {
-        path: '',
-        component: () => import('@/views/system/dict/data.vue'),
-        name: 'DictData',
-        meta: { title: '字典数据', icon: 'Dict', activeMenu: '/system/dict' },
-      },
-    ],
-  },
-  {
-    path: '/monitor/job/log',
-    component: Layout,
-    meta: { hidden: true },
-    children: [
-      {
-        path: '',
-        name: 'JobLog',
-        component: () => import('@/views/monitor/job/log.vue'),
-        meta: { title: '调度日志', icon: 'Log', activeMenu: '/monitor/job' },
-      },
-    ],
-  },
+  // {
+  //   path: '/system/dict/data',
+  //   component: Layout,
+  //   meta: { hidden: true },
+  //   children: [
+  //     {
+  //       path: '',
+  //       component: () => import('@/views/system/dict/data.vue'),
+  //       name: 'DictData',
+  //       meta: { title: '字典数据', icon: 'Dict', activeMenu: '/system/dict' },
+  //     },
+  //   ],
+  // },
+  // {
+  //   path: '/monitor/job/log',
+  //   component: Layout,
+  //   meta: { hidden: true },
+  //   children: [
+  //     {
+  //       path: '',
+  //       name: 'JobLog',
+  //       component: () => import('@/views/monitor/job/log.vue'),
+  //       meta: { title: '调度日志', icon: 'Log', activeMenu: '/monitor/job' },
+  //     },
+  //   ],
+  // },
 
   // Temp
   // {

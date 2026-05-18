@@ -111,6 +111,9 @@ export class MenuService {
     const queryBuilder = this.menuRepository.createQueryBuilder('menu')
     queryBuilder.where('menu.menuType = :menuType', { menuType: 'F' })
     if (!isAdmin) {
+      // - 做一次内连接：把 menu 关联的 roles 关系表 join 进来，别名叫 role 。
+      // - 这要求 Menu 实体里存在 roles 的关联关系（多对多/一对多等）， menu.roles 是 TypeORM 的关系路径写法。
+      // - innerJoin 表示“必须能关联到 role 的 menu 才会出现”，也就是没有任何角色关联的菜单会被排除。
       queryBuilder.innerJoin('menu.roles', 'role')
       queryBuilder.andWhere('role.id IN (:...roleIds)', { roleIds })
     }
