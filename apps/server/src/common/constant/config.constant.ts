@@ -29,6 +29,12 @@ export const ConfigConstant = {
   SERVER_IS_DEMO: 'server.isDemo',
 
   /**
+   * 是否允许多设备登录
+   * 是否允许用户在多个设备上同时登录，默认值为 true
+   */
+  SERVER_ALLOW_MULTI_DEVICE: 'server.allowMultiDevice',
+
+  /**
    * 数据库配置
    * 配置文件中数据库相关配置的命名空间，包含主机、端口、用户名、密码、数据库名等
    */
@@ -66,9 +72,15 @@ export const ConfigConstant = {
 
   /**
    * 数据库字符集
-   * 数据库连接的字符集，默认值为 utf8mb4_unicode_ci
+   * 数据库连接的字符集，默认值为 utf8mb4_0900_ai_ci
    */
   DATABASE_CHARSET: 'database.charset',
+
+  /**
+   * 数据库排序规则
+   * 数据库连接的排序规则，默认值为 utf8mb4_0900_ai_ci
+   */
+  DATABASE_COLLATION: 'database.collation',
 
   /**
    * 数据库同步模式

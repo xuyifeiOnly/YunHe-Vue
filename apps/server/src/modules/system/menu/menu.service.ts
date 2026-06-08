@@ -97,6 +97,7 @@ export class MenuService {
   public async findRoutesByRoleIds(roleIds: string[], isAdmin: boolean) {
     const queryBuilder = this.menuRepository.createQueryBuilder('menu')
     queryBuilder.where('menu.menuType != :menuType', { menuType: 'F' })
+    queryBuilder.andWhere('menu.status = :status', { status: CommonConstant.STATUS_NORMAL })
     if (!isAdmin) {
       queryBuilder.innerJoin('menu.roles', 'role')
       queryBuilder.andWhere('role.id IN (:...roleIds)', { roleIds })
@@ -110,6 +111,7 @@ export class MenuService {
   public async findPermissionsByRoleIds(roleIds: string[], isAdmin: boolean): Promise<string[]> {
     const queryBuilder = this.menuRepository.createQueryBuilder('menu')
     queryBuilder.where('menu.menuType = :menuType', { menuType: 'F' })
+    queryBuilder.andWhere('menu.status = :status', { status: CommonConstant.STATUS_NORMAL })
     if (!isAdmin) {
       // - 做一次内连接：把 menu 关联的 roles 关系表 join 进来，别名叫 role 。
       // - 这要求 Menu 实体里存在 roles 的关联关系（多对多/一对多等）， menu.roles 是 TypeORM 的关系路径写法。

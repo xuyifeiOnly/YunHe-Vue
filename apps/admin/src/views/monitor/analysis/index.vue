@@ -8,7 +8,7 @@
       <header class="monitor-dashboard__header">
         <div class="monitor-dashboard__header-left" @click="toHome">
           <img src="/img/logo.png" alt="logo" class="monitor-dashboard__logo" />
-          <span class="monitor-dashboard__sys-name">云禾管理系统</span>
+          <span class="monitor-dashboard__sys-name">{{ appTitle }}</span>
         </div>
         <div class="monitor-dashboard__header-center">
           <h1 class="monitor-dashboard__title">实时监控中心</h1>
@@ -173,14 +173,17 @@
 import type { EChartsOption } from 'echarts'
 import { toHome } from '@/router/router.helper'
 import { registerChinaMap } from './register-china-map'
-import { formatTime, getWeekDay } from '@yunhe-vue/utils'
+import { formatTime, getDaysDiff, getWeekDay } from '@yunhe/utils'
 import { browserData, osData, chinaMapScatterData, chinaFlyLines, systemResourceData, redisCommandData, onlineUserData, loginRecordData } from './mock-data'
+import { CacheConstant } from '@/common'
+import { getSystemSetting } from '@/utils'
 
 // const isFullscreen = ref(false)
 const mapReady = ref(false)
 
 /** 实时计算当前页面的帧率（FPS） */
 const fps = useFps()
+const appTitle = import.meta.env.VITE_APP_TITLE
 
 const TABLE_ROW_COUNT = 4 // 实际显示是 4 +1 行
 
@@ -460,15 +463,36 @@ const redisCommandOption = computed<EChartsOption>(() => ({
   ],
 }))
 
-const kpiCards = [
+const daysSinceLaunch = shallowRef<number>(0)
+const transitionDaysSinceLaunch = useTransition(daysSinceLaunch, { duration: 800 })
+
+const kpiCards = computed(() => [
   { icon: 'Online', label: '在线用户', value: '2,847', trend: '↑ 12.5%', trendUp: true },
   { icon: 'User', label: '系统总用户', value: '18,632', trend: '↑ 8.3%', trendUp: true },
   { icon: 'Logininfor', label: '今日登录', value: '1,536', trend: '↑ 5.2%', trendUp: true },
   // { icon: 'Check', label: '登录成功率', value: '98.6%', trend: '↑ 0.3%', trendUp: true },
   { icon: 'Fps', label: '屏幕帧率', value: fps, trend: '↑ 0.3%', trendUp: true },
-  { icon: 'Server', label: '运行时间', value: '127 天', trend: '14 时 32 分', trendUp: true },
+  { icon: 'Server', label: '运行时间', value: `${Math.round(transitionDaysSinceLaunch.value)} 天`, trend: '14 时 32 分', trendUp: true },
   { icon: 'Redis', label: 'Redis Key', value: '12,486', trend: '↑ 3.1%', trendUp: true },
-]
+])
+
+function handleThemeChange(event: StorageEvent) {
+  if (event.key !== CacheConstant.SYSTEM_SETTING) return
+  const systemSetting = getSystemSetting()
+  const isDark = systemSetting?.theme === 'dark'
+  document.documentElement.classList.toggle('dark', isDark)
+}
+
+// 组件挂载时初始化
+onMounted(() => {
+  daysSinceLaunch.value = Math.abs(getDaysDiff('2026-04-27'))
+  window.addEventListener('storage', handleThemeChange)
+})
+
+// 组件卸载时移除事件
+onUnmounted(() => {
+  window.removeEventListener('storage', handleThemeChange)
+})
 </script>
 
 <style lang="scss" scoped>

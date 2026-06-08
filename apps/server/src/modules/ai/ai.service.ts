@@ -1,19 +1,22 @@
 import { AiConversationEntity, AiMessageEntity, BusinessException, CommonConstant, ConfigConstant } from '@/common'
 import { Injectable } from '@nestjs/common'
-import { ChatDto, CreateConversationDto, UpdateConversationTitleDto } from './ai.dto'
+import { ChatDto, UpdateConversationTitleDto } from './ai.dto'
 import { ConfigService } from '@nestjs/config'
 import { ChatPromptTemplate } from '@langchain/core/prompts'
 import { ChatOpenAI, ChatOpenAIFields } from '@langchain/openai'
 import { HumanMessage, SystemMessage, BaseMessage, AIMessage } from '@langchain/core/messages'
-import { createAgent, CreateAgentParams } from 'langchain'
 import { tools } from './tools'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Equal, Repository } from 'typeorm'
-import { LLMResult } from '@langchain/core/outputs'
 import { TokenCounterHandler } from '@/utils'
+import { SYSTEM_PROMPT } from './prompt/context'
+import { formatMessagesAsText } from './ai.helper'
+import { StringOutputParser } from '@langchain/core/output_parsers'
 
 @Injectable()
 export class AiService {
+  /** 系统提示 */
+  private systemPrompt: string = SYSTEM_PROMPT
   /** AI 模型实例 */
   private model: ChatOpenAI
   /** 每多少条消息触发一次摘要生成（通用场景：12条） */
@@ -29,57 +32,13 @@ export class AiService {
     this.initChatModel()
   }
 
-  // public async test() {
-  //   const messages = [new SystemMessage('你是一个专业的天气助手'), new HumanMessage('北京的天气怎么样？')]
-  //   const result = await this.agent.invoke({
-  //     messages,
-  //   })
-  //   console.log('result: ', result)
-  //   return result
-  // }
-
   /** AI 流式对话 */
   public async streamChat(chatDto: ChatDto, userId: string, response: ExpressResponse) {
     try {
-      // 从 DTO 中获取会话ID（不传=新建）
-      let finalConversationId = chatDto.conversationId
-      let fullAiReply = ''
-      const userContent = chatDto.message
-      // 无会话ID → 自动新建会话
-      if (!finalConversationId) {
-        const conversation = new AiConversationEntity()
-        conversation.userId = userId
-        conversation.title = userContent.slice(0, 20) // 标题取前20字
-        conversation.status = CommonConstant.STATUS_NORMAL
-        const savedConversation = await this.conversationRepository.save(conversation)
-        finalConversationId = savedConversation.id
-      }
-      // 保存用户消息到数据库
-      const userMessageId = await this.saveMessage(finalConversationId, 'user', userContent)
-      // 构建最优上下文：缓存摘要 + 最新 RECENT_MESSAGE_COUNT 条消息对话
-      const langChainMessages = await this.buildContextMessages(finalConversationId)
-      // 流式调用 AI
-      const chatPrompt = ChatPromptTemplate.fromMessages(langChainMessages)
-      const chain = chatPrompt.pipe(this.model)
-      const tokenCounter = new TokenCounterHandler()
-      const stream = await chain.stream({}, { callbacks: [tokenCounter] })
-      // 流式输出
-      for await (const chunk of stream) {
-        const content = chunk?.content || ''
-        fullAiReply += content
-        if (!content) continue
-        response.write(`data: ${JSON.stringify({ content, conversationId: finalConversationId })}\n\n`)
-      }
-      // 入库 Token 记录
-      await this.saveMessage(finalConversationId, 'assistant', fullAiReply, tokenCounter.completionTokens)
-      await this.messageRepository.update(userMessageId, { tokens: tokenCounter.promptTokens })
-      // 懒更新摘要
-      await this.lazyUpdateSummary(finalConversationId)
-      // 结束响应
-      if (!response.writableEnded) {
-        response.write(`data: ${JSON.stringify({ status: 'DONE', conversationId: finalConversationId })}\n\n`)
-        response.end()
-      }
+      const ctx = await this.prepareStreamContext(chatDto, userId)
+      const { fullAiReply, tokenCounter } = await this.runStream(ctx.messages, ctx.conversationId, response)
+      await this.finalizeStream(ctx, fullAiReply, tokenCounter)
+      this.sendDoneEvent(response, ctx.conversationId)
     } catch (error: unknown) {
       const errMsg = error instanceof Error ? error.message : '未知错误'
       this.setErrorResponse(response, errMsg)
@@ -94,6 +53,8 @@ export class AiService {
 
   /** 删除会话 */
   public async deleteConversation(conversationId: string) {
+    // const count = await this.conversationRepository.count()
+    // if (count === 1) throw new BusinessException('至少保留一个会话')
     await this.conversationRepository.delete(conversationId)
     await this.messageRepository.delete({ conversationId })
     return '删除成功'
@@ -125,6 +86,78 @@ export class AiService {
     return queryBuilder.getMany()
   }
 
+  /* -------------------------------------------------------------------------- */
+  /*                            Stream Chat Pipeline                            */
+  /* -------------------------------------------------------------------------- */
+
+  /**
+   * 准备流式对话上下文
+   * — 取/建会话 → 保存用户消息 → 构建 AI 消息上下文
+   */
+  private async prepareStreamContext(chatDto: ChatDto, userId: string) {
+    const userContent = chatDto.message
+    const conversationId = await this.ensureConversation(chatDto, userId, userContent)
+    const userMessageId = await this.saveMessage(conversationId, 'user', userContent)
+    const messages = await this.buildContextMessages(conversationId)
+    return { conversationId, userMessageId, messages }
+  }
+
+  /**
+   * 执行流式 LLM 调用并写 SSE
+   * — prompt → chain.stream() → for await → response.write
+   */
+  private async runStream(messages: BaseMessage[], conversationId: string, response: ExpressResponse) {
+    const chatPrompt = ChatPromptTemplate.fromMessages(messages)
+    const chain = chatPrompt.pipe(this.model)
+    const tokenCounter = new TokenCounterHandler()
+    const stream = await chain.stream({}, { callbacks: [tokenCounter] })
+    let fullAiReply = ''
+    for await (const chunk of stream) {
+      const content = chunk?.content || ''
+      fullAiReply += content
+      if (!content) continue
+      response.write(`data: ${JSON.stringify({ content, conversationId })}\n\n`)
+    }
+    return { fullAiReply, tokenCounter }
+  }
+
+  /**
+   * 收尾阶段
+   * — 保存 AI 回复 → 更新用户消息 Token → 懒更新摘要
+   */
+  private async finalizeStream(ctx: { conversationId: string; userMessageId: string }, fullAiReply: string, tokenCounter: TokenCounterHandler) {
+    await this.saveMessage(ctx.conversationId, 'assistant', fullAiReply, tokenCounter.completionTokens)
+    await this.messageRepository.update(ctx.userMessageId, { tokens: tokenCounter.promptTokens })
+    await this.lazyUpdateSummary(ctx.conversationId)
+  }
+
+  /**
+   * 确保会话存在
+   * — 有 conversationId 直接返回，否则新建
+   */
+  private async ensureConversation(chatDto: ChatDto, userId: string, userContent: string): Promise<string> {
+    if (chatDto.conversationId) return chatDto.conversationId
+    const conversation = new AiConversationEntity()
+    conversation.userId = userId
+    conversation.title = userContent.slice(0, 20)
+    conversation.status = CommonConstant.STATUS_NORMAL
+    const saved = await this.conversationRepository.save(conversation)
+    return saved.id
+  }
+
+  /**
+   * 发送 SSE DONE 事件
+   */
+  private sendDoneEvent(response: ExpressResponse, conversationId: string) {
+    if (!response.headersSent || !response.writable) return
+    response.write(`data: ${JSON.stringify({ status: 'DONE', conversationId })}\n\n`)
+    response.end()
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                              Private Handlers                               */
+  /* -------------------------------------------------------------------------- */
+
   /** 初始化聊天模型 */
   private initChatModel() {
     const options: ChatOpenAIFields = {}
@@ -146,23 +179,26 @@ export class AiService {
     // 小于触发阈值 → 不生成
     if (count < this.SUMMARY_TRIGGER_COUNT) return
     // 纯常量计算：每N条更新一次
-    if (!((count - this.SUMMARY_TRIGGER_COUNT) % this.RECENT_MESSAGE_COUNT === 0)) return
+    if (!((count - this.SUMMARY_TRIGGER_COUNT) % this.SUMMARY_TRIGGER_COUNT === 0)) return
     // 生成并更新摘要
     const summary = await this.generateSummary(conversationId)
     await this.conversationRepository.update(conversationId, { summary })
   }
 
-  /** 生成对话摘要（仅懒更新时调用） */
+  /** 生成对话摘要（增量压缩：旧摘要 + 最近消息 → 新摘要） */
   private async generateSummary(conversationId: string): Promise<string> {
-    const queryBuilder = this.messageRepository.createQueryBuilder('message')
-    queryBuilder.where('message.conversationId = :conversationId', { conversationId })
-    queryBuilder.orderBy('message.createTime', 'ASC')
-    const messages = await queryBuilder.getMany()
-    const text = messages.map((m) => `${m.role}: ${m.content}`).join('\n')
-    const prompt = ChatPromptTemplate.fromTemplate(`将以下对话压缩为简洁摘要，仅保留核心信息：{text}`)
-    const chain = prompt.pipe(this.model)
-    const result = await chain.invoke({ text })
-    return result.content as string
+    const conversation = await this.conversationRepository.findOneBy({ id: conversationId })
+    const existingSummary = conversation?.summary || ''
+    const msgQuery = this.messageRepository.createQueryBuilder('message')
+    msgQuery.where('message.conversationId = :conversationId', { conversationId })
+    msgQuery.orderBy('message.createTime', 'DESC')
+    msgQuery.take(this.SUMMARY_TRIGGER_COUNT)
+    const recent = await msgQuery.getMany()
+    const newText = formatMessagesAsText(recent.reverse())
+    const templateText = existingSummary ? `将以下新旧内容合并为一段简洁摘要，仅保留核心信息：\n【已有摘要】\n{existingSummary}\n\n【新增对话】\n{newText}` : `将以下对话压缩为简洁摘要，仅保留核心信息：{newText}`
+    const prompt = ChatPromptTemplate.fromTemplate(templateText)
+    const chain = prompt.pipe(this.model).pipe(new StringOutputParser())
+    return await chain.invoke({ existingSummary, newText })
   }
 
   /** 构建AI上下文：摘要 + 最新 RECENT_MESSAGE_COUNT 条消息 */
@@ -178,7 +214,7 @@ export class AiService {
     const latestMessages = await msgQuery.getMany()
     const recent = latestMessages.reverse()
     // 3. 组装最终上下文
-    const msgs: BaseMessage[] = []
+    const msgs: BaseMessage[] = [new SystemMessage(this.systemPrompt)]
     if (summary) msgs.push(new SystemMessage(summary))
     for (const msg of recent) {
       if (msg.role === 'user') msgs.push(new HumanMessage(msg.content))
@@ -200,8 +236,9 @@ export class AiService {
 
   /** 处理错误响应 */
   private setErrorResponse(response: ExpressResponse, message: string) {
+    if (!response.headersSent || !response.writable) return
     response.write(`data: ${JSON.stringify({ content: message })}\n\n`)
-    if (!response.writableEnded) response.write(`data: ${JSON.stringify({ status: 'DONE' })}\n\n`)
-    if (!response.writableEnded) response.end()
+    response.write(`data: ${JSON.stringify({ status: 'DONE' })}\n\n`)
+    response.end()
   }
 }
