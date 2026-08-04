@@ -16,7 +16,9 @@ import { AiModule } from './modules/ai/ai.module'
 import { ResourceModule } from './modules/resource/resource.module'
 
 @Module({
+  // 注册系统功能模块，告诉 NestJS 这个应用由哪些模块组成。
   imports: [
+    // 在 NestJS 应用启动时初始化全局配置模块。
     ConfigModule.forRoot({ load: [configuration], ignoreEnvFile: false, isGlobal: true, cache: true }), // 加载配置文件
     DatabaseModule, // 数据库模块
     TokenModule, // 令牌模块
