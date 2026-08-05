@@ -8,7 +8,7 @@ import { CaptchaService } from '@/shared/captcha.service'
 import { UserService } from '../system/user/user.service'
 import { LogService } from '../monitor/log/log.service'
 import { MenuService } from '../system/menu/menu.service'
-import { BusinessException, CommonConstant, ConfigConstant, RedisConstant } from '@/common'
+import { BusinessException, CommonConstant, ConfigConstant, RedisConstant, UserEntity } from '@/common'
 
 @Injectable()
 export class AuthService {

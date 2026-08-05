@@ -14,7 +14,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly redisService: RedisService,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(), // 从请求头中提取 JWT
       ignoreExpiration: false,
       passReqToCallback: true,
       secretOrKey: configService.get<string>(ConfigConstant.JWT_SECRET, 'JWT_SECRET'),

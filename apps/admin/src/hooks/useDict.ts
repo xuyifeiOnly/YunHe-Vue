@@ -45,6 +45,7 @@ export function useDict<T extends string[]>(...dictTypes: T) {
   }
 
   async function getList() {
+    // 并发加载所有字典数据, 并等待所有请求完成, 无论成功失败
     await Promise.allSettled(dictTypes.map((type) => getDictData(type)))
   }
 

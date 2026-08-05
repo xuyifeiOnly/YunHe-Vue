@@ -24,7 +24,7 @@ import { ResourceModule } from './modules/resource/resource.module'
     TokenModule, // 令牌模块
     CommonModule, // 公共模块（Upload、Excel 等通用功能）
     SharedModule, // 共享模块
-    AuthModule, // 认证模块
+    AuthModule, // 认证模块 （用户登录、注册、权限校验等）
     SystemModule, // 系统管理模块
     MonitorModule,
     AiModule, // 系统监控模块

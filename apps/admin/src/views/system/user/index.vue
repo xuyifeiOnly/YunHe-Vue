@@ -49,6 +49,8 @@ const isMultiple = computed(() => multipleSelection.value.length > 0)
 const tableRef = useTemplateRef('tableRef')
 const queryParams = ref<UserQueryParams>({ pageNo: 1, pageSize: 10 })
 const userDialogRef = useTemplateRef('userDialogRef')
+// console.log(sys_normal_disable,'=========')
+// console.log(JSON.stringify(sys_normal_disable.value))
 
 const items: ProSearchItem[] = [
   { type: 'input', prop: 'username', label: '用户账号' },
