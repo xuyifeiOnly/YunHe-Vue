@@ -1,5 +1,5 @@
 <template>
-  <div class="app-content">
+  <div class="app-content flex flex-col h-full">
     <ProSearch :items v-model="queryParams" @query="handleQuery" @reset="resetQuery" v-permissions="['system:user:query']"></ProSearch>
 
     <div class="mb-16px">

@@ -1,5 +1,5 @@
 <template>
-  <el-drawer v-model="visible" :with-header="false" :size="260">
+  <el-drawer v-model="visible" :with-header="false" :size="400">
     <div class="flex flex-col h-full">
       <div class="title-container flex items-center mb-16px">
         <div class="fw-bold tracking-widest">角色权限分配</div>
@@ -18,7 +18,7 @@
         ></el-tree>
       </div>
 
-      <footer class="flex-center">
+      <footer class="flex-start">
         <el-button @click="handleCancel">取消</el-button>
         <el-button type="primary" @click="handleSubmit">提交</el-button>
       </footer>

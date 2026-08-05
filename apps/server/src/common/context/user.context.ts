@@ -1,3 +1,4 @@
+// Node.js 异步上下文存储，用于在同一次请求的异步调用链中保存并读取当前用户信息
 import { AsyncLocalStorage } from 'async_hooks'
 
 /**

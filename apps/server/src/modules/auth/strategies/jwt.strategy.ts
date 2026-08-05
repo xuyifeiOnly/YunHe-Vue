@@ -3,6 +3,7 @@ import { PassportStrategy } from '@nestjs/passport'
 import { ConfigService } from '@nestjs/config'
 import { HttpStatus, Injectable, Logger } from '@nestjs/common'
 import { RedisService } from '@/shared/redis.service'
+import { UserContext } from '@/common/context/user.context'
 import { BusinessException, ConfigConstant, RedisConstant } from '@/common'
 
 @Injectable()
@@ -34,6 +35,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
     // 自动续期缓存（best-effort，不阻塞请求，失败仅打日志不影响认证结果）
     this.expire(userId, uuid)
+    UserContext.setCurrentUser(payload.username)
     // 续期成功后返回 payload
     return payload
   }

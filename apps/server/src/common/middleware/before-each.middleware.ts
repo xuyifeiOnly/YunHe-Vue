@@ -8,13 +8,13 @@ export class BeforeEachMiddleware implements NestMiddleware {
 
   use(request: ExpressRequest, response: ExpressResponse, next: ExpressNextFunction): void {
     // 1. 生成请求唯一ID，绑定到请求对象并返回响应头
-    console.log('11111111111')
+    // console.log('11111111111')
     const requestId = randomUUID()
     request[CommonConstant.REQUEST_ID_KEY] = requestId
     response.setHeader(CommonConstant.REQUEST_ID_HEADER, requestId)
 
     // 2. 打印请求信息
-    this.printRequestInfo(request)
+    // this.printRequestInfo(request)
 
     // 3. 继续执行后续中间件/路由处理
     next()
