@@ -1,6 +1,13 @@
 import { describe, expect, test } from 'bun:test'
 import { BusinessException } from '../common'
-import { assertRecord, parseBoolean, parseIds, parsePagination, parsePositiveInt, parseString } from './validation'
+import {
+  assertRecord,
+  parseBoolean,
+  parseIds,
+  parsePagination,
+  parsePositiveInt,
+  parseString,
+} from './validation'
 
 describe('validation', () => {
   test('parsePositiveInt 解析正整数', () => {
@@ -11,8 +18,12 @@ describe('validation', () => {
 
   test('parseString 处理必填和长度', () => {
     expect(parseString('  abc  ', '名称')).toBe('abc')
-    expect(() => parseString('', '名称', { required: true })).toThrow(BusinessException)
-    expect(() => parseString('abcd', '名称', { max: 3 })).toThrow(BusinessException)
+    expect(() => parseString('', '名称', { required: true })).toThrow(
+      BusinessException,
+    )
+    expect(() => parseString('abcd', '名称', { max: 3 })).toThrow(
+      BusinessException,
+    )
   })
 
   test('parseBoolean 解析布尔值', () => {
@@ -28,8 +39,14 @@ describe('validation', () => {
   })
 
   test('parsePagination 限制分页大小', () => {
-    expect(parsePagination({ pageNo: '2', pageSize: '20' })).toMatchObject({ pageNo: 2, pageSize: 20, skip: 20 })
-    expect(() => parsePagination({ pageSize: '1001' })).toThrow(BusinessException)
+    expect(parsePagination({ pageNo: '2', pageSize: '20' })).toMatchObject({
+      pageNo: 2,
+      pageSize: 20,
+      skip: 20,
+    })
+    expect(() => parsePagination({ pageSize: '1001' })).toThrow(
+      BusinessException,
+    )
   })
 
   test('parseIds 解析 ID 列表', () => {

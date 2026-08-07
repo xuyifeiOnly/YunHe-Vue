@@ -27,23 +27,35 @@ export function validate(data: object, rules: ValidationRule[]): void {
   for (const rule of rules) {
     const value = source[rule.field]
     const label = rule.label ?? rule.field
-    if (rule.required && (value === undefined || value === null || value === '')) {
+    if (
+      rule.required &&
+      (value === undefined || value === null || value === '')
+    ) {
       throw new BusinessException(`${label}不能为空`)
     }
     if (value === undefined || value === null || value === '') continue
     if (rule.type) {
       const actualType = Array.isArray(value) ? 'array' : typeof value
-      if (actualType !== rule.type) throw new BusinessException(`${label}类型必须为${rule.type}`)
+      if (actualType !== rule.type)
+        throw new BusinessException(`${label}类型必须为${rule.type}`)
     }
     if (rule.min !== undefined) {
-      if (typeof value === 'string' && value.length < rule.min) throw new BusinessException(`${label}长度不能少于${rule.min}个字符`)
-      if (typeof value === 'number' && value < rule.min) throw new BusinessException(`${label}不能小于${rule.min}`)
+      if (typeof value === 'string' && value.length < rule.min)
+        throw new BusinessException(`${label}长度不能少于${rule.min}个字符`)
+      if (typeof value === 'number' && value < rule.min)
+        throw new BusinessException(`${label}不能小于${rule.min}`)
     }
     if (rule.max !== undefined) {
-      if (typeof value === 'string' && value.length > rule.max) throw new BusinessException(`${label}长度不能超过${rule.max}个字符`)
-      if (typeof value === 'number' && value > rule.max) throw new BusinessException(`${label}不能大于${rule.max}`)
+      if (typeof value === 'string' && value.length > rule.max)
+        throw new BusinessException(`${label}长度不能超过${rule.max}个字符`)
+      if (typeof value === 'number' && value > rule.max)
+        throw new BusinessException(`${label}不能大于${rule.max}`)
     }
-    if (rule.pattern && typeof value === 'string' && !rule.pattern.test(value)) {
+    if (
+      rule.pattern &&
+      typeof value === 'string' &&
+      !rule.pattern.test(value)
+    ) {
       throw new BusinessException(`${label}格式不正确`)
     }
     if (rule.validator) {
@@ -54,7 +66,11 @@ export function validate(data: object, rules: ValidationRule[]): void {
 }
 
 /** 校验必填字段 */
-export function validateRequired(data: object, fields: string[], labels?: Record<string, string>): void {
+export function validateRequired(
+  data: object,
+  fields: string[],
+  labels?: Record<string, string>,
+): void {
   const source = data as Record<string, unknown>
   for (const field of fields) {
     const value = source[field]

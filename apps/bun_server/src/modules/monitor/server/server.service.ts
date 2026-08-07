@@ -2,10 +2,21 @@ import si from 'systeminformation'
 
 export class ServerService {
   public async serverInfo() {
-    const [cpuInfo, currentLoad, memInfo, osInfo, networkInterfaces, fsSize] = await Promise.all([si.cpu(), si.currentLoad(), si.mem(), si.osInfo(), si.networkInterfaces(), si.fsSize()])
+    const [cpuInfo, currentLoad, memInfo, osInfo, networkInterfaces, fsSize] =
+      await Promise.all([
+        si.cpu(),
+        si.currentLoad(),
+        si.mem(),
+        si.osInfo(),
+        si.networkInterfaces(),
+        si.fsSize(),
+      ])
     const gb = 1024 ** 3
-    const networkList = Array.isArray(networkInterfaces) ? networkInterfaces : [networkInterfaces]
-    const primaryInterface = networkList.find((net) => !net.internal) ?? networkList[0]
+    const networkList = Array.isArray(networkInterfaces)
+      ? networkInterfaces
+      : [networkInterfaces]
+    const primaryInterface =
+      networkList.find((net) => !net.internal) ?? networkList[0]
     const cpu = {
       cores: cpuInfo.cores,
       used: `${currentLoad.currentLoadUser.toFixed(2)}%`,

@@ -71,7 +71,10 @@ export function registerRouteDefinitions(
 ) {
   routes.forEach(({ handler, ...meta }) => {
     registerRouteMeta(meta)
-    app[meta.method.toLowerCase() as Lowercase<RouteMeta['method']>](meta.path, handler as RouteHandler)
+    app[meta.method.toLowerCase() as Lowercase<RouteMeta['method']>](
+      meta.path,
+      handler as RouteHandler,
+    )
   })
 }
 
@@ -87,7 +90,8 @@ export function getRouteMeta(method: string, path?: string) {
   if (exact) return exact
   // 兜底：保留历史行为，兼容全局前缀拼接场景
   for (const [key, meta] of routeMetaMap) {
-    if (key.startsWith(`${upperMethod} `) && path.endsWith(meta.path)) return meta
+    if (key.startsWith(`${upperMethod} `) && path.endsWith(meta.path))
+      return meta
   }
   return undefined
 }
@@ -102,6 +106,8 @@ function normalizeRouteMeta(meta: RouteMeta): RouteMeta {
     ...meta,
     method,
     demoProtect: meta.demoProtect ?? (method !== 'GET' && !meta.public),
-    repeatSubmit: meta.repeatSubmit ?? (['POST', 'PUT', 'DELETE'].includes(method) ? { interval: 5 } : false),
+    repeatSubmit:
+      meta.repeatSubmit ??
+      (['POST', 'PUT', 'DELETE'].includes(method) ? { interval: 5 } : false),
   }
 }

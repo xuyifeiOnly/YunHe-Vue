@@ -14,7 +14,13 @@ export abstract class BaseEntity extends CommonEntity {
    * @type {string | null}
    * @example "admin123" / "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed"
    */
-  @Column({ name: 'create_by', comment: '创建人', nullable: true, type: 'varchar', length: 36 })
+  @Column({
+    name: 'create_by',
+    comment: '创建人',
+    nullable: true,
+    type: 'varchar',
+    length: 36,
+  })
   createBy: string
 
   /**
@@ -23,7 +29,13 @@ export abstract class BaseEntity extends CommonEntity {
    * @type {string | null}
    * @example "admin456" / "7c9e6679-7425-40de-944b-e07fc1f90ae7"
    */
-  @Column({ name: 'update_by', comment: '更新人', nullable: true, type: 'varchar', length: 36 })
+  @Column({
+    name: 'update_by',
+    comment: '更新人',
+    nullable: true,
+    type: 'varchar',
+    length: 36,
+  })
   updateBy: string
 
   @BeforeInsert()

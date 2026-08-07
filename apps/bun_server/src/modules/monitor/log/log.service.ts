@@ -21,7 +21,12 @@ export class LogService {
   public async logininforList(query: QueryParams) {
     const page = parsePagination(query)
     const where = this.createLogininforWhere(query)
-    const [records, total] = await this.logininforRepository.findAndCount({ where, skip: page.skip, take: page.take, order: { loginTime: 'DESC' } })
+    const [records, total] = await this.logininforRepository.findAndCount({
+      where,
+      skip: page.skip,
+      take: page.take,
+      order: { loginTime: 'DESC' },
+    })
     return { records, list: records, total }
   }
 
@@ -37,14 +42,27 @@ export class LogService {
 
   public async exportLogininfor(query: QueryParams = {}) {
     const where = this.createLogininforWhere(query)
-    const records = await this.logininforRepository.find({ where, order: { loginTime: 'DESC' }, take: EXPORT_LIMIT })
-    return this.excelService.exportResponse(records as unknown as Record<string, unknown>[], `登录日志-${Date.now()}.xlsx`, 'logininfor')
+    const records = await this.logininforRepository.find({
+      where,
+      order: { loginTime: 'DESC' },
+      take: EXPORT_LIMIT,
+    })
+    return this.excelService.exportResponse(
+      records as unknown as Record<string, unknown>[],
+      `登录日志-${Date.now()}.xlsx`,
+      'logininfor',
+    )
   }
 
   public async operlogList(query: QueryParams) {
     const page = parsePagination(query)
     const where = this.createOperlogWhere(query)
-    const [records, total] = await this.operRepository.findAndCount({ where, skip: page.skip, take: page.take, order: { operTime: 'DESC' } })
+    const [records, total] = await this.operRepository.findAndCount({
+      where,
+      skip: page.skip,
+      take: page.take,
+      order: { operTime: 'DESC' },
+    })
     return { records, list: records, total }
   }
 
@@ -60,8 +78,16 @@ export class LogService {
 
   public async exportOperlog(query: QueryParams = {}) {
     const where = this.createOperlogWhere(query)
-    const records = await this.operRepository.find({ where, order: { operTime: 'DESC' }, take: EXPORT_LIMIT })
-    return this.excelService.exportResponse(records as unknown as Record<string, unknown>[], `操作日志-${Date.now()}.xlsx`, 'operlog')
+    const records = await this.operRepository.find({
+      where,
+      order: { operTime: 'DESC' },
+      take: EXPORT_LIMIT,
+    })
+    return this.excelService.exportResponse(
+      records as unknown as Record<string, unknown>[],
+      `操作日志-${Date.now()}.xlsx`,
+      'operlog',
+    )
   }
 
   public createOperlog(data: Partial<OperLogEntity>) {

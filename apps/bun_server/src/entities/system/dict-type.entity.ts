@@ -10,7 +10,13 @@ export class DictTypeEntity extends BaseEntity {
   @Column({ comment: '字典名称', name: 'dict_name' })
   dictName: string
 
-  @Column({ unique: true, name: 'dict_type', length: 20, nullable: false, type: 'varchar' })
+  @Column({
+    unique: true,
+    name: 'dict_type',
+    length: 20,
+    nullable: false,
+    type: 'varchar',
+  })
   dictType: string
 
   @Column({ default: CommonConstant.STATUS_NORMAL, type: 'char', length: 1 })

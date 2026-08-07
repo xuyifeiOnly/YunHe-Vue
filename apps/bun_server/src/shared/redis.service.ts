@@ -37,7 +37,13 @@ export class RedisService {
     const keys: string[] = []
     let cursor = '0'
     do {
-      const [nextCursor, batch] = await this.redisClient.scan(cursor, 'MATCH', pattern, 'COUNT', count)
+      const [nextCursor, batch] = await this.redisClient.scan(
+        cursor,
+        'MATCH',
+        pattern,
+        'COUNT',
+        count,
+      )
       cursor = nextCursor
       keys.push(...batch)
     } while (cursor !== '0')

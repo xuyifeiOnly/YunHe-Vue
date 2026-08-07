@@ -1,4 +1,10 @@
-import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from 'typeorm'
+import {
+  Column,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm'
 import { CommonConstant } from '../../common/constant/common.constant'
 import { BaseEntity } from '../base.entity'
 import { RoleEntity } from './role.entity'
@@ -8,7 +14,13 @@ export class UserEntity extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string
 
-  @Column({ unique: true, length: 20, comment: '用户名', nullable: false, type: 'varchar' })
+  @Column({
+    unique: true,
+    length: 20,
+    comment: '用户名',
+    nullable: false,
+    type: 'varchar',
+  })
   username: string
 
   @Column({ length: 100, comment: '密码', nullable: false, type: 'varchar' })
@@ -23,7 +35,12 @@ export class UserEntity extends BaseEntity {
   @Column({ length: 50, comment: '邮箱', nullable: true, type: 'varchar' })
   email: string
 
-  @Column({ length: 1, comment: '状态', default: CommonConstant.STATUS_NORMAL, type: 'char' })
+  @Column({
+    length: 1,
+    comment: '状态',
+    default: CommonConstant.STATUS_NORMAL,
+    type: 'char',
+  })
   status: string
 
   @Column({ type: 'char', length: '1', comment: '性别', default: '2' })
@@ -39,6 +56,10 @@ export class UserEntity extends BaseEntity {
   loginTime: string
 
   @ManyToMany(() => RoleEntity, (role) => role.users, { cascade: true })
-  @JoinTable({ name: 'sys_user_role', joinColumn: { name: 'user_id', referencedColumnName: 'id' }, inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' } })
+  @JoinTable({
+    name: 'sys_user_role',
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
+  })
   roles: RoleEntity[]
 }

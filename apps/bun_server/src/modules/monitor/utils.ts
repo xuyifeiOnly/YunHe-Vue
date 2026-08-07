@@ -13,10 +13,12 @@ export function parseRedisInfo(info: string) {
 
 export function parseCommandStats(info: string) {
   return Object.entries(parseRedisInfo(info)).map(([name, value]) => {
-    const stat = Object.fromEntries(value.split(',').map((part) => {
-      const [key, val] = part.split('=')
-      return [key, Number(val) || val]
-    }))
+    const stat = Object.fromEntries(
+      value.split(',').map((part) => {
+        const [key, val] = part.split('=')
+        return [key, Number(val) || val]
+      }),
+    )
     return { name: name.replace('cmdstat_', ''), value: stat }
   })
 }

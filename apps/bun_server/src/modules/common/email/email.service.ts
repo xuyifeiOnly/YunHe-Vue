@@ -6,29 +6,52 @@ import type { AppConfig } from '../../../config/config'
 
 export class EmailService {
   private readonly transporter: nodemailer.Transporter | null
-  private readonly templateRoot = join(process.cwd(), 'public', 'template', 'email')
+  private readonly templateRoot = join(
+    process.cwd(),
+    'public',
+    'template',
+    'email',
+  )
 
   constructor(config: AppConfig) {
     const email = config.email as SMTPTransport.Options | undefined
     this.transporter = email?.host ? nodemailer.createTransport(email) : null
   }
 
-  public async sendMail(options: { to: string; subject: string; html?: string; text?: string; from?: string }) {
+  public async sendMail(options: {
+    to: string
+    subject: string
+    html?: string
+    text?: string
+    from?: string
+  }) {
     if (!this.transporter) return { success: false, message: '邮件服务未配置' }
     await this.transporter.sendMail(options)
     return { success: true }
   }
 
   public sendCaptchaMail(to: string, code: string, expiresIn = 5) {
-    return this.sendMail({ to, subject: '账号安全验证', html: this.renderTemplate('captcha', { code, expiresIn }) })
+    return this.sendMail({
+      to,
+      subject: '账号安全验证',
+      html: this.renderTemplate('captcha', { code, expiresIn }),
+    })
   }
 
   public sendNoticeMail(to: string, title: string, content: string) {
-    return this.sendMail({ to, subject: `【系统通知】${title}`, html: this.renderTemplate('notice', { title, content }) })
+    return this.sendMail({
+      to,
+      subject: `【系统通知】${title}`,
+      html: this.renderTemplate('notice', { title, content }),
+    })
   }
 
   public sendAlertMail(to: string, errorMessage: string) {
-    return this.sendMail({ to, subject: '⚠️ 系统异常告警', html: this.renderTemplate('alert', { errorMessage }) })
+    return this.sendMail({
+      to,
+      subject: '⚠️ 系统异常告警',
+      html: this.renderTemplate('alert', { errorMessage }),
+    })
   }
 
   public sendCaptcha(to: string, code: string, expiresIn = 5) {
@@ -43,16 +66,24 @@ export class EmailService {
     return this.sendAlertMail(to, errorMessage)
   }
 
-  private renderTemplate(name: 'captcha' | 'notice' | 'alert', context: Record<string, unknown>) {
+  private renderTemplate(
+    name: 'captcha' | 'notice' | 'alert',
+    context: Record<string, unknown>,
+  ) {
     const filePath = join(this.templateRoot, `${name}.hbs`)
-    const template = existsSync(filePath) ? readFileSync(filePath, 'utf8') : this.defaultTemplate(name)
+    const template = existsSync(filePath)
+      ? readFileSync(filePath, 'utf8')
+      : this.defaultTemplate(name)
     return template
-      .replace(/{{{\s*(\w+)\s*}}}/g, (_, key: string) => String(context[key] ?? ''))
+      .replace(/{{{\s*(\w+)\s*}}}/g, (_, key: string) =>
+        String(context[key] ?? ''),
+      )
       .replace(/{{\s*(\w+)\s*}}/g, (_, key: string) => escapeHtml(context[key]))
   }
 
   private defaultTemplate(name: string) {
-    if (name === 'captcha') return '<p>验证码：{{code}}，{{expiresIn}} 分钟内有效</p>'
+    if (name === 'captcha')
+      return '<p>验证码：{{code}}，{{expiresIn}} 分钟内有效</p>'
     if (name === 'notice') return '<h3>{{title}}</h3><div>{{content}}</div>'
     return '<p>系统异常告警：{{errorMessage}}</p>'
   }

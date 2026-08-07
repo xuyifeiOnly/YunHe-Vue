@@ -42,7 +42,11 @@ export class OperLogEntity {
   @Column({ comment: '操作类型', type: 'char', default: BusinessType.OTHER })
   businessType: BusinessType
 
-  @Column({ comment: '操作状态', type: 'char', default: CommonConstant.STATUS_NORMAL })
+  @Column({
+    comment: '操作状态',
+    type: 'char',
+    default: CommonConstant.STATUS_NORMAL,
+  })
   status: string
 
   @Column({ comment: '请求时间', name: 'oper_time' })
@@ -51,6 +55,12 @@ export class OperLogEntity {
   @Column({ comment: '请求耗时', default: null })
   duration: number
 
-  @Column({ comment: '请求唯一标识', type: 'varchar', length: 64, default: null, name: 'request_id' })
+  @Column({
+    comment: '请求唯一标识',
+    type: 'varchar',
+    length: 64,
+    default: null,
+    name: 'request_id',
+  })
   requestId: string
 }

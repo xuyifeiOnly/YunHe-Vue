@@ -22,6 +22,8 @@ export interface AppRequestContext {
   responseValue?: unknown
 }
 
-export function getContextPath(context: Pick<AppRequestContext, 'path' | 'request'>) {
+export function getContextPath(
+  context: Pick<AppRequestContext, 'path' | 'request'>,
+) {
   return context.path ?? new URL(context.request.url).pathname
 }

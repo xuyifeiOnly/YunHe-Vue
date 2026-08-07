@@ -11,7 +11,12 @@ export class CacheService {
       this.redisService.client.info('commandstats').catch(() => ''),
       this.redisService.client.dbsize().catch(() => 0),
     ])
-    return { dbsize, dbSize: dbsize, info: parseRedisInfo(rawInfo), commandstats: parseCommandStats(rawCommandstats) }
+    return {
+      dbsize,
+      dbSize: dbsize,
+      info: parseRedisInfo(rawInfo),
+      commandstats: parseCommandStats(rawCommandstats),
+    }
   }
 
   public cacheNames() {
@@ -28,7 +33,10 @@ export class CacheService {
   public async cacheKeys(pattern = '*') {
     const normalized = this.normalizeCacheName(pattern)
     if (!normalized) return []
-    const finalPattern = normalized.endsWith(':*') || normalized.includes('*') ? normalized : `${normalized}:*`
+    const finalPattern =
+      normalized.endsWith(':*') || normalized.includes('*')
+        ? normalized
+        : `${normalized}:*`
     return this.redisService.scanKeys(finalPattern)
   }
 
@@ -67,7 +75,10 @@ export class CacheService {
   }
 
   private assertAllowedCachePattern(pattern: string) {
-    const allowed = this.cacheNames().some((item) => pattern === item.prefix || pattern.startsWith(`${item.prefix}:`))
+    const allowed = this.cacheNames().some(
+      (item) =>
+        pattern === item.prefix || pattern.startsWith(`${item.prefix}:`),
+    )
     if (!allowed) throw new BusinessException('缓存键名不在允许清理范围内')
   }
 

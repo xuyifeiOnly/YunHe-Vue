@@ -4,9 +4,16 @@ interface TreeHelperConfig {
   parentId: string
 }
 
-const DEFAULT_CONFIG: TreeHelperConfig = { id: 'id', children: 'children', parentId: 'parentId' }
+const DEFAULT_CONFIG: TreeHelperConfig = {
+  id: 'id',
+  children: 'children',
+  parentId: 'parentId',
+}
 
-export function listToTree<T = any>(list: any[], config: Partial<TreeHelperConfig> = {}): T[] {
+export function listToTree<T = any>(
+  list: any[],
+  config: Partial<TreeHelperConfig> = {},
+): T[] {
   const { id, parentId, children } = Object.assign({}, DEFAULT_CONFIG, config)
   const nodeMap = new Map()
   const treeList: T[] = []

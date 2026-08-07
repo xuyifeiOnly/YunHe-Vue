@@ -30,15 +30,31 @@ function createFileTransport(level: string, dirname: string) {
     zippedArchive: true,
     maxSize: '10m',
     maxFiles: '14d',
-    format: format.combine(timestampFormat, format.errors({ stack: true }), format.json(), format.printf(formatLog)),
+    format: format.combine(
+      timestampFormat,
+      format.errors({ stack: true }),
+      format.json(),
+      format.printf(formatLog),
+    ),
   })
 }
 
 const transportList = [
   new transports.Console({
-    format: format.combine(timestampFormat, format.printf((info) => `[${info.timestamp}] [${info.level.toUpperCase()}] ${info.message}`)),
+    format: format.combine(
+      timestampFormat,
+      format.printf(
+        (info) =>
+          `[${info.timestamp}] [${info.level.toUpperCase()}] ${info.message}`,
+      ),
+    ),
   }),
-  ...(!isDev ? [createFileTransport('info', 'logs/info'), createFileTransport('error', 'logs/error')] : []),
+  ...(!isDev
+    ? [
+        createFileTransport('info', 'logs/info'),
+        createFileTransport('error', 'logs/error'),
+      ]
+    : []),
 ]
 
 /** 全局 Logger 实例 */
@@ -53,7 +69,11 @@ export function logInfo(message: string, context?: Record<string, unknown>) {
   logger.info(message, context)
 }
 
-export function logError(message: string, error?: unknown, context?: Record<string, unknown>) {
+export function logError(
+  message: string,
+  error?: unknown,
+  context?: Record<string, unknown>,
+) {
   const meta: Record<string, unknown> = { ...context }
   if (error instanceof Error) {
     meta.stack = error.stack

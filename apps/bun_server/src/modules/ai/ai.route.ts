@@ -3,7 +3,12 @@ import { assertRecord, parseBoolean, parseString } from '../../core/validation'
 import type { AppLike, RouteDefinition } from '../../routes/meta'
 import { registerRouteDefinitions } from '../../routes/meta'
 
-type ChatBody = { message?: string; prompt?: string; conversationId?: string; enableInternetSearch?: boolean }
+type ChatBody = {
+  message?: string
+  prompt?: string
+  conversationId?: string
+  enableInternetSearch?: boolean
+}
 type ConversationQuery = { conversationId?: string; id?: string }
 type UpdateTitleBody = { conversationId?: string; id?: string; title?: string }
 
@@ -16,7 +21,11 @@ function parseChatBody(body: unknown): ChatBody {
     message,
     prompt,
     conversationId: parseString(data.conversationId, '会话ID'),
-    enableInternetSearch: parseBoolean(data.enableInternetSearch, '联网搜索', false),
+    enableInternetSearch: parseBoolean(
+      data.enableInternetSearch,
+      '联网搜索',
+      false,
+    ),
   }
 }
 
@@ -30,16 +39,71 @@ function parseUpdateTitleBody(body: unknown): UpdateTitleBody {
 }
 
 function parseConversationIdQuery(query: ConversationQuery) {
-  return parseString(query.conversationId ?? query.id, '会话ID', { required: true })
+  return parseString(query.conversationId ?? query.id, '会话ID', {
+    required: true,
+  })
 }
 
 const routes = [
-  { method: 'POST', path: '/ai/chat', description: 'AI 对话', handler: ({ body, services, user }: RouteContext<ChatBody>) => services.aiService.chat(parseChatBody(body), user!.userId) },
-  { method: 'POST', path: '/ai/chat/stream', description: 'AI SSE 对话', handler: ({ body, services, user }: RouteContext<ChatBody>) => services.aiService.stream(parseChatBody(body), user!.userId) },
-  { method: 'GET', path: '/ai/conversation/list', description: 'AI 会话列表', handler: ({ services, user }: RouteContext) => services.aiService.getConversations(user!.userId) },
-  { method: 'DELETE', path: '/ai/conversation/delete', description: 'AI 会话删除', handler: ({ query, services, user }: RouteContext<unknown, ConversationQuery>) => services.aiService.deleteConversation(parseConversationIdQuery(query), user!.userId) },
-  { method: 'PUT', path: '/ai/conversation/updateTitle', description: 'AI 会话标题更新', handler: ({ body, services, user }: RouteContext<UpdateTitleBody>) => services.aiService.updateConversationTitle(parseUpdateTitleBody(body), user!.userId) },
-  { method: 'GET', path: '/ai/message/list', description: 'AI 消息列表', handler: ({ query, services, user }: RouteContext<unknown, ConversationQuery>) => services.aiService.getMessages(parseConversationIdQuery(query), user!.userId) },
+  {
+    method: 'POST',
+    path: '/ai/chat',
+    description: 'AI 对话',
+    handler: ({ body, services, user }: RouteContext<ChatBody>) =>
+      services.aiService.chat(parseChatBody(body), user!.userId),
+  },
+  {
+    method: 'POST',
+    path: '/ai/chat/stream',
+    description: 'AI SSE 对话',
+    handler: ({ body, services, user }: RouteContext<ChatBody>) =>
+      services.aiService.stream(parseChatBody(body), user!.userId),
+  },
+  {
+    method: 'GET',
+    path: '/ai/conversation/list',
+    description: 'AI 会话列表',
+    handler: ({ services, user }: RouteContext) =>
+      services.aiService.getConversations(user!.userId),
+  },
+  {
+    method: 'DELETE',
+    path: '/ai/conversation/delete',
+    description: 'AI 会话删除',
+    handler: ({
+      query,
+      services,
+      user,
+    }: RouteContext<unknown, ConversationQuery>) =>
+      services.aiService.deleteConversation(
+        parseConversationIdQuery(query),
+        user!.userId,
+      ),
+  },
+  {
+    method: 'PUT',
+    path: '/ai/conversation/updateTitle',
+    description: 'AI 会话标题更新',
+    handler: ({ body, services, user }: RouteContext<UpdateTitleBody>) =>
+      services.aiService.updateConversationTitle(
+        parseUpdateTitleBody(body),
+        user!.userId,
+      ),
+  },
+  {
+    method: 'GET',
+    path: '/ai/message/list',
+    description: 'AI 消息列表',
+    handler: ({
+      query,
+      services,
+      user,
+    }: RouteContext<unknown, ConversationQuery>) =>
+      services.aiService.getMessages(
+        parseConversationIdQuery(query),
+        user!.userId,
+      ),
+  },
 ] satisfies RouteDefinition[]
 
 export function registerRoutes(app: AppLike) {

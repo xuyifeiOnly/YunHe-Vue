@@ -31,7 +31,11 @@ export interface IdsPayload {
   logIds?: string | string[]
 }
 
-export interface RouteContext<Body = unknown, Query = QueryParams, Params = RouteParams> {
+export interface RouteContext<
+  Body = unknown,
+  Query = QueryParams,
+  Params = RouteParams,
+> {
   body: Body
   query: Query
   params: Params
@@ -45,10 +49,17 @@ export interface RouteContext<Body = unknown, Query = QueryParams, Params = Rout
 }
 
 /** 已登录用户的路由上下文，user 必填 */
-export type AuthedRouteContext<Body = unknown, Query = QueryParams, Params = RouteParams> = RouteContext<Body, Query, Params> & {
+export type AuthedRouteContext<
+  Body = unknown,
+  Query = QueryParams,
+  Params = RouteParams,
+> = RouteContext<Body, Query, Params> & {
   user: AuthUser
 }
 
-export type RouteHandler<Body = unknown, Query = QueryParams, Params = RouteParams, Result = unknown> = (
-  context: RouteContext<Body, Query, Params>,
-) => Result
+export type RouteHandler<
+  Body = unknown,
+  Query = QueryParams,
+  Params = RouteParams,
+  Result = unknown,
+> = (context: RouteContext<Body, Query, Params>) => Result

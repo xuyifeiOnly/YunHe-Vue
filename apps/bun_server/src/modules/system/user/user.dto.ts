@@ -23,7 +23,9 @@ export interface CreateUserBody {
 }
 
 /** 更新用户请求体 */
-export interface UpdateUserBody extends Partial<Omit<CreateUserBody, 'username'>> {
+export interface UpdateUserBody extends Partial<
+  Omit<CreateUserBody, 'username'>
+> {
   id: string
 }
 

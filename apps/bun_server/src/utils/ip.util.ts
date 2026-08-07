@@ -6,15 +6,24 @@ const searcher = newWithFileOnly(defaultDbFile)
 /**
  * 获取客户端真实 IP，兼容反向代理环境
  */
-export function getRequestIp(request: Request, server?: { requestIP?: (request: Request) => { address?: string } | null }): string {
+export function getRequestIp(
+  request: Request,
+  server?: { requestIP?: (request: Request) => { address?: string } | null },
+): string {
   const xForwardedFor = request.headers.get('x-forwarded-for')
   const xRealIp = request.headers.get('x-real-ip')
-  const ip = xForwardedFor?.split(',')[0]?.trim() || xRealIp?.trim() || server?.requestIP?.(request)?.address || ''
+  const ip =
+    xForwardedFor?.split(',')[0]?.trim() ||
+    xRealIp?.trim() ||
+    server?.requestIP?.(request)?.address ||
+    ''
   return normalizeIp(ip)
 }
 
 export function normalizeIp(ip: string): string {
-  return ip.replace('::ffff:', '').replace('::1', '127.0.0.1').trim() || 'unknown'
+  return (
+    ip.replace('::ffff:', '').replace('::1', '127.0.0.1').trim() || 'unknown'
+  )
 }
 
 /**

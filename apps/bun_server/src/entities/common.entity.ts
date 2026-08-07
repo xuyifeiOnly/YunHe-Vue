@@ -8,7 +8,14 @@ export abstract class CommonEntity {
    * @type {Date | string} 数据库存储为 datetime，加载后可转为格式化字符串
    * @example "2025-01-01 12:00:00" / Date 对象
    */
-  @Column({ name: 'create_time', comment: '创建时间', update: false, type: 'datetime', precision: 0, default: () => 'CURRENT_TIMESTAMP' })
+  @Column({
+    name: 'create_time',
+    comment: '创建时间',
+    update: false,
+    type: 'datetime',
+    precision: 0,
+    default: () => 'CURRENT_TIMESTAMP',
+  })
   createTime: Date
 
   /**
@@ -17,7 +24,14 @@ export abstract class CommonEntity {
    * @type {Date | string} 数据库存储为 datetime，加载后可转为格式化字符串
    * @example "2025-01-02 14:30:00" / Date 对象
    */
-  @Column({ name: 'update_time', comment: '更新时间', type: 'datetime', precision: 0, default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+  @Column({
+    name: 'update_time',
+    comment: '更新时间',
+    type: 'datetime',
+    precision: 0,
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP',
+  })
   updateTime: Date
 
   /**

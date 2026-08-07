@@ -1,7 +1,18 @@
-import { Equal, In, Like, Not, type FindOptionsWhere, type Repository } from 'typeorm'
+import {
+  Equal,
+  In,
+  Like,
+  Not,
+  type FindOptionsWhere,
+  type Repository,
+} from 'typeorm'
 import { BusinessException, PromptEntity } from '../../../common'
 import { pageResult, parseIds, parsePagination } from '../../../core/validation'
-import type { CreatePromptBody, PromptListQuery, UpdatePromptBody } from './prompt.dto'
+import type {
+  CreatePromptBody,
+  PromptListQuery,
+  UpdatePromptBody,
+} from './prompt.dto'
 
 export class PromptService {
   constructor(private readonly promptRepository: Repository<PromptEntity>) {}
@@ -12,7 +23,12 @@ export class PromptService {
     if (query.title) where.title = Like(`%${query.title}%`)
     if (query.type) where.type = Like(`%${query.type}%`)
     if (query.status) where.status = Equal(query.status)
-    const [records, total] = await this.promptRepository.findAndCount({ where, skip: page.skip, take: page.take, order: { createTime: 'DESC' } })
+    const [records, total] = await this.promptRepository.findAndCount({
+      where,
+      skip: page.skip,
+      take: page.take,
+      order: { createTime: 'DESC' },
+    })
     return pageResult(records, total)
   }
 
@@ -23,7 +39,10 @@ export class PromptService {
   }
 
   public async create(data: CreatePromptBody) {
-    const exists = await this.promptRepository.existsBy({ title: Equal(data.title), type: Equal(data.type) })
+    const exists = await this.promptRepository.existsBy({
+      title: Equal(data.title),
+      type: Equal(data.type),
+    })
     if (exists) throw new BusinessException('提示词标题已存在')
     await this.promptRepository.save(this.promptRepository.create(data))
     return '添加成功'
@@ -34,7 +53,10 @@ export class PromptService {
     const prompt = await this.promptRepository.findOneBy({ id: Equal(data.id) })
     if (!prompt) throw new BusinessException('提示词不存在')
     if (data.title && data.title !== prompt.title) {
-      const exists = await this.promptRepository.existsBy({ title: Equal(data.title), id: Not(data.id) })
+      const exists = await this.promptRepository.existsBy({
+        title: Equal(data.title),
+        id: Not(data.id),
+      })
       if (exists) throw new BusinessException('提示词标题已存在')
     }
     Object.assign(prompt, data)

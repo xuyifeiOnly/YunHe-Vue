@@ -7,7 +7,11 @@ import { join } from 'node:path'
 import { loadConfig } from './src/config/config'
 import { getDataSource } from './src/database/data-source'
 import { BusinessException, CommonConstant } from './src/common'
-import { authHook, getResponseCache, setResponseCache } from './src/core/auth-hook'
+import {
+  authHook,
+  getResponseCache,
+  setResponseCache,
+} from './src/core/auth-hook'
 import { recordOperlog } from './src/core/operlog-recorder'
 import { registerModuleRoutes } from './src/core/route-loader'
 import { errorResponse, successResponse } from './src/core/response'
@@ -26,11 +30,17 @@ const prefix = `/${config.server.globalPrefix}`
 const app = new Elysia()
   .use(cors({ origin: true, credentials: true }))
   .use(staticPlugin({ assets: uploadRoot, prefix: '/uploads' }))
-  .derive(({ request }): Pick<AppRequestContext, 'services' | 'requestId' | 'path'> => ({
-    services,
-    requestId: request.headers.get(CommonConstant.REQUEST_ID_HEADER) ?? crypto.randomUUID(),
-    path: new URL(request.url).pathname,
-  }))
+  .derive(
+    ({
+      request,
+    }): Pick<AppRequestContext, 'services' | 'requestId' | 'path'> => ({
+      services,
+      requestId:
+        request.headers.get(CommonConstant.REQUEST_ID_HEADER) ??
+        crypto.randomUUID(),
+      path: new URL(request.url).pathname,
+    }),
+  )
   .onBeforeHandle(async (context) => {
     const ctx = context as unknown as AppRequestContext
     applySecurityHeaders(ctx.set.headers)
@@ -41,7 +51,9 @@ const app = new Elysia()
     return authHook(ctx)
   })
   .onAfterHandle(async (context) => {
-    const ctx = context as unknown as AppRequestContext & { responseValue: unknown }
+    const ctx = context as unknown as AppRequestContext & {
+      responseValue: unknown
+    }
     const { responseValue, requestId } = ctx
     await setResponseCache(ctx, responseValue)
     void recordOperlog(ctx, responseValue, true)
@@ -63,4 +75,6 @@ await registerModuleRoutes(api)
 app.use(api)
 app.listen(config.server.port)
 
-logInfo(`Bun + Elysia 服务已启动：http://localhost:${config.server.port}${prefix}`)
+logInfo(
+  `Bun + Elysia 服务已启动：http://localhost:${config.server.port}${prefix}`,
+)

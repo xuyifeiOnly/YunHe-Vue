@@ -10,7 +10,10 @@ export async function encryptPassword(password: string): Promise<string> {
   }
 }
 
-export async function verifyPassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
+export async function verifyPassword(
+  plainPassword: string,
+  hashedPassword: string,
+): Promise<boolean> {
   try {
     if (!plainPassword || !hashedPassword) return false
     return await argon2.verify(hashedPassword, plainPassword)

@@ -4,11 +4,31 @@ import { load as loadYaml } from 'js-yaml'
 
 export interface AppConfig {
   server: { port: number; globalPrefix: string; isDemo: boolean }
-  database: { host: string; port: number; username: string; password: string; database: string; charset: string; synchronize: boolean }
+  database: {
+    host: string
+    port: number
+    username: string
+    password: string
+    database: string
+    charset: string
+    synchronize: boolean
+  }
   redis: { host: string; port: number; password?: string; db: number }
   jwt: { secret: string; expiresIn: number }
-  email: { from: string; host: string; port: number; secure: boolean; code: string }
-  openai: { apiKey: string; model: string; baseURL: string; temperature: number; maxTokens: number }
+  email: {
+    from: string
+    host: string
+    port: number
+    secure: boolean
+    code: string
+  }
+  openai: {
+    apiKey: string
+    model: string
+    baseURL: string
+    temperature: number
+    maxTokens: number
+  }
 }
 export let appConfig: AppConfig
 export function loadConfig(): AppConfig {

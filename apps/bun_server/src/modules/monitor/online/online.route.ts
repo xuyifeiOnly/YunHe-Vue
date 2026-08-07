@@ -18,15 +18,30 @@ function parseForceLogoutQuery(query: ForceLogoutQuery) {
 }
 
 const routes = [
-  { method: 'GET', path: '/monitor/online/list', description: '在线用户', permissions: ['monitor:online:query'], handler: ({ query, services }: RouteContext<unknown, Query>) => services.onlineService.onlineList(query) },
-  { method: 'GET', path: '/monitor/online/count', description: '在线数量', permissions: ['monitor:online:query'], handler: ({ services }: RouteContext) => services.onlineService.onlineCount() },
+  {
+    method: 'GET',
+    path: '/monitor/online/list',
+    description: '在线用户',
+    permissions: ['monitor:online:query'],
+    handler: ({ query, services }: RouteContext<unknown, Query>) =>
+      services.onlineService.onlineList(query),
+  },
+  {
+    method: 'GET',
+    path: '/monitor/online/count',
+    description: '在线数量',
+    permissions: ['monitor:online:query'],
+    handler: ({ services }: RouteContext) =>
+      services.onlineService.onlineCount(),
+  },
   {
     method: 'DELETE',
     path: '/monitor/online/forceLogout',
     description: '强制退出',
     permissions: ['monitor:online:forceLogout'],
     operLog: { title: '在线用户', businessType: BusinessType.DELETE },
-    handler: ({ query, services }: RouteContext<unknown, ForceLogoutQuery>) => services.onlineService.forceLogout(parseForceLogoutQuery(query)),
+    handler: ({ query, services }: RouteContext<unknown, ForceLogoutQuery>) =>
+      services.onlineService.forceLogout(parseForceLogoutQuery(query)),
   },
 ] satisfies RouteDefinition[]
 
