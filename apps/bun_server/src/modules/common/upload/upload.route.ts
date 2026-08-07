@@ -13,25 +13,31 @@ interface UploadFileBody {
 }
 interface CheckFileBody {
   hash?: string
+  fileHash?: string
   fileName?: string
 }
 interface ChunkBody {
   file?: File
   hash?: string
+  fileHash?: string
   index?: string | number
+  chunkHash?: string
 }
 interface ParsedChunkBody {
   file: File
   hash: string
-  index: number
+  index?: number
+  chunkHash?: string
 }
 interface MergeBody {
-  hash: string
+  hash?: string
+  fileHash?: string
   fileName: string
   totalChunks?: number | string
 }
 interface ClearChunkQuery {
   hash?: string
+  fileHash?: string
 }
 
 function parseFile(value: unknown) {
@@ -49,15 +55,16 @@ function parseHash(value: unknown) {
 function parseCheckBody(body: unknown): CheckFileBody {
   const data = assertRecord(body)
   return {
-    hash: parseHash(data.hash),
-    fileName: parseString(data.fileName, '文件名', {
-      required: true,
-      max: 255,
-    }),
+    fileHash: parseHash(data.hash ?? data.fileHash),
+    fileName:
+      data.fileName === undefined
+        ? undefined
+        : parseString(data.fileName, '文件名', { max: 255 }),
   }
 }
 
 function parseChunkIndex(value: unknown) {
+  if (value === undefined || value === null || value === '') return undefined
   const index = parsePositiveInt(value, '分片序号')
   if (index > 100000) throw new BusinessException('分片序号超出限制')
   return index - 1
@@ -73,8 +80,12 @@ function parseChunkBody(body: unknown): ParsedChunkBody {
   const data = assertRecord(body)
   return {
     file: parseFile(data.file),
-    hash: parseHash(data.hash),
+    hash: parseHash(data.hash ?? data.fileHash),
     index: parseChunkIndex(data.index),
+    chunkHash:
+      data.chunkHash === undefined
+        ? undefined
+        : parseString(data.chunkHash, '分片 hash', { required: true, max: 140 }),
   }
 }
 
@@ -121,6 +132,7 @@ const routes = [
         data.file,
         data.hash,
         data.index,
+        data.chunkHash,
       )
     },
   },
@@ -138,7 +150,7 @@ const routes = [
     description: '分片清理',
     repeatSubmit: false,
     handler: ({ query, services }: RouteContext<unknown, ClearChunkQuery>) =>
-      services.uploadService.clearChunk(parseHash(query.hash)),
+      services.uploadService.clearChunk(parseHash(query.hash ?? query.fileHash)),
   },
 ] satisfies RouteDefinition[]
 

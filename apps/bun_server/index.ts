@@ -28,7 +28,16 @@ const services = createServices(config, dataSource, uploadRoot)
 const prefix = `/${config.server.globalPrefix}`
 
 const app = new Elysia()
-  .use(cors({ origin: true, credentials: true }))
+  .use(
+    cors({
+      origin: ({ headers }) => {
+        const origin = headers.get('origin')
+        if (!origin) return true
+        return config.server.corsOrigins.includes(origin)
+      },
+      credentials: true,
+    }),
+  )
   .use(staticPlugin({ assets: uploadRoot, prefix: '/uploads' }))
   .derive(
     ({
@@ -43,6 +52,7 @@ const app = new Elysia()
   )
   .onBeforeHandle(async (context) => {
     const ctx = context as unknown as AppRequestContext
+    if (ctx.path?.startsWith('/uploads/')) return
     applySecurityHeaders(ctx.set.headers)
     ctx.set.headers[CommonConstant.REQUEST_ID_HEADER] = ctx.requestId
     ctx.startTime = Date.now()
@@ -74,6 +84,16 @@ await registerModuleRoutes(api)
 
 app.use(api)
 app.listen(config.server.port)
+
+async function shutdown() {
+  await services.jobService.shutdown()
+  await services.redisService.quit()
+  if (dataSource.isInitialized) await dataSource.destroy()
+  process.exit(0)
+}
+
+process.on('SIGINT', () => void shutdown())
+process.on('SIGTERM', () => void shutdown())
 
 logInfo(
   `Bun + Elysia 服务已启动：http://localhost:${config.server.port}${prefix}`,

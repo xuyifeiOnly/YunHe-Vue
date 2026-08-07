@@ -56,7 +56,8 @@ export async function getResponseCache(context: AuthContext) {
     context.request.method.toUpperCase() !== 'GET'
   )
     return null
-  return context.services.redisService.get(getResponseCacheKey(context))
+  const cacheKey = await getResponseCacheKey(context)
+  return context.services.redisService.get(cacheKey)
 }
 
 export async function setResponseCache(
@@ -78,7 +79,7 @@ export async function setResponseCache(
       ? (routeMeta.responseCache.ttl ?? 60)
       : 60
   await context.services.redisService.set(
-    getResponseCacheKey(context),
+    await getResponseCacheKey(context),
     JSON.stringify(response),
     'EX',
     ttl,
@@ -198,8 +199,27 @@ export function getClientIp(
   return getRequestIp(request, server)
 }
 
-function getResponseCacheKey(context: AuthContext) {
-  return `${RedisConstant.RESPONSE_CACHE}:${context.request.method}:${getContextPath(context)}:${new URL(context.request.url).search}`
+async function getResponseCacheKey(context: AuthContext) {
+  const routeMeta = getRouteMeta(
+    context.request.method,
+    getContextPath(context),
+  )
+  const authScope = routeMeta?.public
+    ? 'public'
+    : await getAuthenticatedCacheScope(context)
+  return `${RedisConstant.RESPONSE_CACHE}:${authScope}:${context.request.method}:${getContextPath(context)}:${new URL(context.request.url).search}`
+}
+
+async function getAuthenticatedCacheScope(context: AuthContext) {
+  if (context.user?.userId) return context.user.userId
+  const authorization = context.request.headers.get(CommonConstant.AUTHORIZATION)
+  if (!authorization?.startsWith(`${CommonConstant.TOKEN_PREFIX} `))
+    throw new BusinessException('登录状态已失效，请重新登录', 401)
+  const token = authorization.slice(`${CommonConstant.TOKEN_PREFIX} `.length)
+  const user = await context.services.authService.verifyToken(token)
+  context.user = { ...user, token }
+  UserContext.setCurrentUser(context.user.username)
+  return user.userId
 }
 
 async function sha256(value: string) {

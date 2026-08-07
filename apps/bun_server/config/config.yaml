@@ -3,12 +3,15 @@ server:
   port: 3000
   globalPrefix: 'api'
   isDemo: false
+  corsOrigins:
+    - 'http://localhost:5173'
+    - 'http://127.0.0.1:5173'
 
 database:
   host: '127.0.0.1'
   port: 3306
   username: 'root'
-  password: 'root'
+  password: ''
   database: 'yunhe'
   charset: 'utf8mb4_unicode_ci'
   synchronize: false
@@ -16,22 +19,22 @@ database:
 redis:
   host: '127.0.0.1'
   port: 6379
-  password: 'redis'
+  password: ''
   db: 0
 
 jwt:
-  secret: 80464BA1E96A7A86941B13AE69431E1A
+  secret: 'please-change-me'
   expiresIn: 1800
 
 email:
-  from: '1227162950@qq.com'
-  host: 'smtp.qq.com'
+  from: ''
+  host: ''
   port: 465
   secure: true
-  code: '123456'
+  code: ''
 
 openai:
-  apiKey: f4b32a3537fd42e99f5b5e87871b5e9c.IXWibpwsncAMzxWt
+  apiKey: ''
   model: 'GLM-4.7'
   baseURL: https://open.bigmodel.cn/api/paas/v4/
   temperature: 0.7

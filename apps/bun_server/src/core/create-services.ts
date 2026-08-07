@@ -38,6 +38,7 @@ export function createServices(
   dataSource: DataSource,
   uploadRoot: string,
 ) {
+  // 需要注册的所有服务========
   const redisService = new RedisService(config)
   const captchaService = new CaptchaService(redisService)
   const userService = new UserService(
@@ -96,6 +97,7 @@ export function createServices(
     captchaService,
   )
   authService.setLogService(logService)
+  // 需要注册的所有服务========
   // Elysia 没有 Nest DiscoveryService，这里用显式服务注册表提供等价的定时任务调用目标发现能力。
   jobService.registerService({
     JobService: { service: jobService, methods: ['testDingShi'] },

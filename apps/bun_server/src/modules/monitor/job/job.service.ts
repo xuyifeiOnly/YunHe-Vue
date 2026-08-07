@@ -71,6 +71,14 @@ export class JobService {
     // this.registerService('JobService', this, ['test'])
   }
 
+  public async shutdown() {
+    await Promise.all([
+      this.worker.close(),
+      this.queueEvents.close(),
+      this.queue.close(),
+    ])
+  }
+
   public registerService(
     name: string,
     service: JobServiceTarget,

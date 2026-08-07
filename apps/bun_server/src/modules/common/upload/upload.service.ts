@@ -11,16 +11,33 @@ import { extname, resolve } from 'node:path'
 import { pipeline } from 'node:stream/promises'
 import { BusinessException } from '../../../common'
 
+const ALLOWED_EXTENSIONS = new Set([
+  '.jpg',
+  '.jpeg',
+  '.png',
+  '.gif',
+  '.webp',
+  '.svg',
+  '.pdf',
+  '.doc',
+  '.docx',
+  '.xls',
+  '.xlsx',
+  '.txt',
+  '.csv',
+])
+
 export class UploadService {
   constructor(private readonly uploadRoot: string) {}
 
   public async uploadFile(file: File | undefined) {
     if (!file) throw new BusinessException('上传文件不能为空')
+    this.validateFileName(file.name)
     if (file.size > 10 * 1024 * 1024)
       throw new BusinessException('文件大于10MB，请使用分片上传')
     const buffer = Buffer.from(await file.arrayBuffer())
     const hash = await this.createSha256(buffer)
-    const fileName = `${hash}${extname(file.name)}`
+    const fileName = `${hash}${extname(file.name).toLowerCase()}`
     const filePath = this.safeResolve(this.uploadRoot, fileName)
     if (!existsSync(filePath)) await writeFile(filePath, buffer)
     return `/uploads/${fileName}`
@@ -33,7 +50,8 @@ export class UploadService {
   }) {
     const hash = data.fileHash ?? data.hash ?? ''
     if (hash) this.validateHash(hash)
-    const ext = data.fileName ? extname(data.fileName) : ''
+    if (data.fileName) this.validateFileName(data.fileName)
+    const ext = data.fileName ? extname(data.fileName).toLowerCase() : ''
     const finalName = hash ? `${hash}${ext}` : ''
     const finalPath = finalName
       ? this.safeResolve(this.uploadRoot, finalName)
@@ -42,6 +60,7 @@ export class UploadService {
       ? this.safeResolve(this.uploadRoot, 'chunks', hash)
       : ''
     const isExist = Boolean(finalPath && existsSync(finalPath))
+    if (isExist && chunkDir) await rm(chunkDir, { recursive: true, force: true })
     return {
       isExist,
       exists: isExist,
@@ -59,6 +78,8 @@ export class UploadService {
     chunkHash?: string,
   ) {
     if (!file || !hash) throw new BusinessException('分片参数不完整')
+    if (file.size > 10 * 1024 * 1024)
+      throw new BusinessException('单个分片不能超过10MB')
     this.validateHash(hash)
     const chunkName = this.getSafeChunkName(
       chunkHash ?? String(index ?? file.name),
@@ -82,10 +103,14 @@ export class UploadService {
     if (!hash) throw new BusinessException('文件 hash 不能为空')
     this.validateHash(hash)
     if (!data.fileName) throw new BusinessException('文件名不能为空')
+    this.validateFileName(data.fileName)
     const chunkDir = this.safeResolve(this.uploadRoot, 'chunks', hash)
-    const finalFileName = `${hash}${extname(data.fileName)}`
+    const finalFileName = `${hash}${extname(data.fileName).toLowerCase()}`
     const finalFilePath = this.safeResolve(this.uploadRoot, finalFileName)
-    if (existsSync(finalFilePath)) return `/uploads/${finalFileName}`
+    if (existsSync(finalFilePath)) {
+      await rm(chunkDir, { recursive: true, force: true })
+      return `/uploads/${finalFileName}`
+    }
     if (!existsSync(chunkDir))
       throw new BusinessException('分片文件不存在，请重新上传')
     const chunks = this.getOrderedChunks(chunkDir, data.totalChunks)
@@ -122,6 +147,12 @@ export class UploadService {
   private validateHash(hash: string) {
     if (!/^[a-fA-F0-9]{32,128}$/.test(hash))
       throw new BusinessException('文件 hash 格式错误')
+  }
+
+  private validateFileName(fileName: string) {
+    const ext = extname(fileName).toLowerCase()
+    if (!ext || !ALLOWED_EXTENSIONS.has(ext))
+      throw new BusinessException('不支持的文件类型')
   }
 
   private getOrderedChunks(chunkDir: string, totalChunks?: number | string) {

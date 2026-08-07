@@ -5,6 +5,8 @@ import { formatTime, getLocationByIP, logError } from '../utils'
 import { getContextPath, type AppRequestContext } from './app-context'
 import { getClientIp } from './auth-hook'
 
+const MAX_LOG_BODY_LENGTH = 5000
+
 export async function recordOperlog(
   context: AppRequestContext,
   result: unknown,
@@ -56,11 +58,16 @@ async function buildParams(request: Request) {
       try {
         params.body = maskSensitiveData(JSON.parse(text))
       } catch {
-        params.body = text
+        params.body = truncateText(text)
       }
     }
   }
   return JSON.stringify(maskSensitiveData(params), null, 2)
+}
+
+function truncateText(text: string) {
+  if (text.length <= MAX_LOG_BODY_LENGTH) return text
+  return `${text.slice(0, MAX_LOG_BODY_LENGTH)}...`
 }
 
 function maskSensitiveData(value: unknown): unknown {
