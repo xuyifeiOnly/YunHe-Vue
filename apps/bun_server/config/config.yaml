@@ -1,0 +1,38 @@
+# 服务器相关配置
+server:
+  port: 3000
+  globalPrefix: 'api'
+  isDemo: false
+
+database:
+  host: '127.0.0.1'
+  port: 3306
+  username: 'root'
+  password: 'root'
+  database: 'yunhe'
+  charset: 'utf8mb4_unicode_ci'
+  synchronize: false
+
+redis:
+  host: '127.0.0.1'
+  port: 6379
+  password: 'redis'
+  db: 0
+
+jwt:
+  secret: 80464BA1E96A7A86941B13AE69431E1A
+  expiresIn: 1800
+
+email:
+  from: '1227162950@qq.com'
+  host: 'smtp.qq.com'
+  port: 465
+  secure: true
+  code: '123456'
+
+openai:
+  apiKey: f4b32a3537fd42e99f5b5e87871b5e9c.IXWibpwsncAMzxWt
+  model: 'GLM-4.7'
+  baseURL: https://open.bigmodel.cn/api/paas/v4/
+  temperature: 0.7
+  maxTokens: 1024

@@ -1,0 +1,45 @@
+{
+  "name": "bun_server",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun --watch index.ts",
+    "start": "bun index.ts",
+    "check": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@elysiajs/cors": "latest",
+    "@elysiajs/static": "latest",
+    "@langchain/core": "latest",
+    "@langchain/openai": "latest",
+    "argon2": "latest",
+    "bullmq": "latest",
+    "elysia": "latest",
+    "exceljs": "latest",
+    "ioredis": "latest",
+    "ip2region-ts": "latest",
+    "jose": "latest",
+    "js-yaml": "latest",
+    "langchain": "latest",
+    "lodash-es": "latest",
+    "mysql2": "latest",
+    "nodemailer": "latest",
+    "reflect-metadata": "latest",
+    "svg-captcha": "latest",
+    "systeminformation": "latest",
+    "typeorm": "latest",
+    "ua-parser-js": "latest",
+    "winston": "latest",
+    "winston-daily-rotate-file": "latest"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/js-yaml": "latest",
+    "@types/lodash-es": "latest",
+    "@types/nodemailer": "latest",
+    "@types/ua-parser-js": "latest",
+    "typescript": "^5"
+  }
+}
