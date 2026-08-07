@@ -3,7 +3,7 @@
     <AppLogo v-if="settingStore.showLogo" />
 
     <el-scrollbar wrap-class="scrollbar-wrapper">
-      <el-menu class="sidebar-menu" :collapse="isCollapse" :collapse-transition="false" :defaultActive :uniqueOpened>
+      <el-menu class="sidebar-menu" :collapse="isCollapse" :collapse-transition="false" :default-active="defaultActive" :default-openeds="defaultOpeneds" :unique-opened="uniqueOpened">
         <SidebarItem v-for="(route, index) in sidebarRouters" :key="route.path + index" :item="route" :base-path="route.path" />
       </el-menu>
     </el-scrollbar>
@@ -14,17 +14,44 @@
 defineOptions({ name: 'Sidebar' })
 import AppLogo from '../AppLogo/index.vue'
 import SidebarItem from './SidebarItem.vue'
+import type { RouteRecordRaw } from 'vue-router'
+import { isExternal } from '@yunhe/utils'
 
 const route = useRoute()
-// const router = useRouter()
 const appStore = useAppStore()
 const settingStore = useSettingStore()
 const permissionStore = usePermissionStore()
 
 const isCollapse = computed(() => appStore.isCollapse)
 const sidebarRouters = computed(() => permissionStore.sidebarRoutes)
-const defaultActive = computed(() => route.meta.activeMenu || route.path)
+const defaultActive = computed(() => String(route.meta.activeMenu || route.path))
+const defaultOpeneds = computed(() => findOpeneds(sidebarRouters.value, defaultActive.value))
 const uniqueOpened = computed(() => settingStore.uniqueOpened)
+
+function normalizePath(path: string): string {
+  return path ? path.replace(/\/+/g, '/').replace(/\/$/, '') : path
+}
+
+function resolveChildPath(parentPath: string, routePath: string) {
+  if (isExternal(routePath)) return routePath
+  if (isExternal(parentPath)) return parentPath
+  if (routePath.startsWith('/')) return normalizePath(routePath)
+  return normalizePath(`${parentPath}/${routePath}`)
+}
+
+function findOpeneds(routes: RouteRecordRaw[], activePath: string, parentPath = ''): string[] {
+  for (const item of routes) {
+    if (item.meta?.hidden) continue
+    const currentPath = resolveChildPath(parentPath, item.path)
+    const children = item.children?.filter((child) => !child.meta?.hidden) ?? []
+    if (currentPath === activePath) return []
+    const childOpeneds = findOpeneds(children, activePath, currentPath)
+    if (childOpeneds.length || children.some((child) => resolveChildPath(currentPath, child.path) === activePath)) {
+      return [currentPath, ...childOpeneds]
+    }
+  }
+  return []
+}
 </script>
 
 <style lang="scss" scoped>
@@ -40,7 +67,6 @@ const uniqueOpened = computed(() => settingStore.uniqueOpened)
   user-select: none;
   border: none;
   overflow: hidden;
-  // background-color: red !important;
 }
 
 .scrollbar-wrapper {

@@ -38,7 +38,7 @@ export class JobService {
     this.worker.on('failed', async (job, error) => {
       if (job?.data) await this.createJobLog(job.data, error.message || '执行定时任务失败', CommonConstant.STATUS_DISABLE)
     })
-    this.registerService('JobService', this, ['test'])
+    // this.registerService('JobService', this, ['test'])
   }
 
   public registerService(name: string, service: JobServiceTarget, methods?: string[]): void
@@ -65,7 +65,7 @@ export class JobService {
     await Promise.all(records.map((job) => this.startJob(job)))
   }
 
-  public test = () => {
+  public testDingShi = () => {
     logInfo(`test ${process.pid} ${formatTime()}`)
   }
 

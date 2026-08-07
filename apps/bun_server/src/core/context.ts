@@ -1,4 +1,4 @@
-import type { createServices } from './services'
+import type { createServices } from './create-services'
 
 export type AppServices = ReturnType<typeof createServices>
 

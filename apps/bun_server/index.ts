@@ -12,7 +12,7 @@ import { recordOperlog } from './src/core/operlog-recorder'
 import { registerModuleRoutes } from './src/core/route-loader'
 import { errorResponse, successResponse } from './src/core/response'
 import { applySecurityHeaders } from './src/core/security'
-import { createServices } from './src/core/services'
+import { createServices } from './src/core/create-services'
 import type { AppRequestContext } from './src/core/app-context'
 import { logInfo } from './src/utils'
 

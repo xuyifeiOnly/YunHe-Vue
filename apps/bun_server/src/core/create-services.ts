@@ -42,6 +42,7 @@ export function createServices(config: AppConfig, dataSource: DataSource, upload
   authService.setLogService(logService)
   // Elysia 没有 Nest DiscoveryService，这里用显式服务注册表提供等价的定时任务调用目标发现能力。
   jobService.registerService({
+    JobService: { service: jobService, methods: ['testDingShi'] },
     AiService: { service: aiService, methods: [] },
     PromptService: { service: promptService, methods: [] },
     UserService: { service: userService, methods: [] },
