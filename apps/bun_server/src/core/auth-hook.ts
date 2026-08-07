@@ -1,33 +1,30 @@
 import { BusinessException, CommonConstant, RedisConstant } from '../common'
 import type { AuthUser } from './context'
+import { getContextPath, type AppRequestContext } from './app-context'
 import { getRouteMeta } from '../routes/meta'
 import { getRequestIp } from '../utils/ip.util'
 import { UserContext } from './user-context'
 
-interface AuthContext {
-  request: Request
-  path: string
-  server?: { requestIP?: (request: Request) => { address?: string } | null }
-  services: {
-    authService: { verifyToken(token: string): Promise<Omit<AuthUser, 'token'>> }
-    redisService: {
-      get(key: string): Promise<string | null>
-      set(...args: [string, string, 'EX', number] | [string, string]): Promise<unknown>
-      incr(key: string): Promise<number>
-      expire(key: string, seconds: number): Promise<unknown>
-    }
-    config?: { server?: { isDemo?: boolean } }
+interface AuthServices {
+  authService: { verifyToken(token: string): Promise<Omit<AuthUser, 'token'>> }
+  redisService: {
+    get(key: string): Promise<string | null>
+    // 与 ioredis set 重载保持兼容
+    set(...args: unknown[]): Promise<unknown>
+    incr(key: string): Promise<number>
+    expire(key: string, seconds: number): Promise<unknown>
   }
-  set: { headers: Record<string, string> }
-  user?: AuthUser
+  config?: { server?: { isDemo?: boolean } }
 }
+
+type AuthContext = AppRequestContext & { services: AuthServices }
 
 const THROTTLE_WINDOW_SECONDS = 10
 const THROTTLE_LIMIT = 10
 const THROTTLE_LOCK_SECONDS = 30 * 60
 
 export async function authHook(context: AuthContext) {
-  const routeMeta = getRouteMeta(context.request.method, context.path)
+  const routeMeta = getRouteMeta(context.request.method, getContextPath(context))
   if (!routeMeta?.skipThrottle) await checkThrottle(context)
   await checkDemoEnvironment(context, routeMeta?.demoProtect)
   await checkRepeatSubmit(context, routeMeta?.repeatSubmit)
@@ -41,13 +38,13 @@ export async function authHook(context: AuthContext) {
 }
 
 export async function getResponseCache(context: AuthContext) {
-  const routeMeta = getRouteMeta(context.request.method, context.path)
+  const routeMeta = getRouteMeta(context.request.method, getContextPath(context))
   if (!routeMeta?.responseCache || context.request.method.toUpperCase() !== 'GET') return null
   return context.services.redisService.get(getResponseCacheKey(context))
 }
 
 export async function setResponseCache(context: AuthContext, response: unknown) {
-  const routeMeta = getRouteMeta(context.request.method, context.path)
+  const routeMeta = getRouteMeta(context.request.method, getContextPath(context))
   if (!routeMeta?.responseCache || context.request.method.toUpperCase() !== 'GET' || response instanceof Response) return
   const ttl = typeof routeMeta.responseCache === 'object' ? routeMeta.responseCache.ttl ?? 60 : 60
   await context.services.redisService.set(getResponseCacheKey(context), JSON.stringify(response), 'EX', ttl)
@@ -55,7 +52,8 @@ export async function setResponseCache(context: AuthContext, response: unknown) 
 
 async function checkThrottle(context: AuthContext) {
   const clientIp = getClientIp(context.request, context.server)
-  const pathKey = context.path.replace(/[^a-zA-Z0-9:_-]/g, '_')
+  const path = getContextPath(context)
+  const pathKey = path.replace(/[^a-zA-Z0-9:_-]/g, '_')
   const throttleKey = `${RedisConstant.THROTTLE_LIMIT}:${clientIp}:${pathKey}`
   const lockKey = `${throttleKey}:lock`
   if (await context.services.redisService.get(lockKey)) throw new BusinessException('请求过于频繁，请稍后再试', 429)
@@ -70,7 +68,8 @@ async function checkThrottle(context: AuthContext) {
 async function checkDemoEnvironment(context: AuthContext, demoProtect?: boolean) {
   const method = context.request.method.toUpperCase()
   if (!context.services.config?.server?.isDemo || !demoProtect || method === 'GET') return
-  if (context.path.endsWith('/login') || context.path.endsWith('/logout')) return
+  const path = getContextPath(context)
+  if (path.endsWith('/login') || path.endsWith('/logout')) return
   throw new BusinessException('演示环境，不允许操作')
 }
 
@@ -78,7 +77,7 @@ async function checkRepeatSubmit(context: AuthContext, repeatSubmit?: boolean | 
   if (!repeatSubmit || !['POST', 'PUT', 'DELETE'].includes(context.request.method.toUpperCase())) return
   const body = await context.request.clone().text().catch(() => '')
   const token = context.request.headers.get(CommonConstant.AUTHORIZATION) ?? getClientIp(context.request, context.server)
-  const hash = await sha256(`${context.request.method}:${context.path}:${token}:${body}`)
+  const hash = await sha256(`${context.request.method}:${getContextPath(context)}:${token}:${body}`)
   const key = `${RedisConstant.REPEAT_SUBMIT_KEY}:${hash}`
   if (await context.services.redisService.get(key)) throw new BusinessException('不允许重复提交，请稍后再试')
   const interval = typeof repeatSubmit === 'object' ? repeatSubmit.interval ?? 5 : 5
@@ -111,12 +110,12 @@ function parseCacheList(value: string | null) {
   }
 }
 
-export function getClientIp(request: Request, server?: AuthContext['server']) {
+export function getClientIp(request: Request, server?: AppRequestContext['server']) {
   return getRequestIp(request, server)
 }
 
 function getResponseCacheKey(context: AuthContext) {
-  return `${RedisConstant.RESPONSE_CACHE}:${context.request.method}:${context.path}:${new URL(context.request.url).search}`
+  return `${RedisConstant.RESPONSE_CACHE}:${context.request.method}:${getContextPath(context)}:${new URL(context.request.url).search}`
 }
 
 async function sha256(value: string) {

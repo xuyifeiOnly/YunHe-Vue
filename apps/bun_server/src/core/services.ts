@@ -42,10 +42,10 @@ export function createServices(config: AppConfig, dataSource: DataSource, upload
   authService.setLogService(logService)
   // Elysia 没有 Nest DiscoveryService，这里用显式服务注册表提供等价的定时任务调用目标发现能力。
   jobService.registerService({
-    AiService: { service: aiService as unknown as Record<string, unknown>, methods: [] },
-    PromptService: { service: promptService as unknown as Record<string, unknown>, methods: [] },
-    UserService: { service: userService as unknown as Record<string, unknown>, methods: [] },
-    DictService: { service: dictService as unknown as Record<string, unknown>, methods: [] },
+    AiService: { service: aiService, methods: [] },
+    PromptService: { service: promptService, methods: [] },
+    UserService: { service: userService, methods: [] },
+    DictService: { service: dictService, methods: [] },
   })
   void jobService.initJobs().catch((error) => logError('任务初始化失败', error))
   return {

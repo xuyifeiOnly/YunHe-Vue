@@ -2,15 +2,21 @@ import { Queue, QueueEvents, Worker, type JobsOptions } from 'bullmq'
 import { Equal, Like, Not, type FindOptionsWhere, type Repository } from 'typeorm'
 import { BusinessException, CommonConstant, JobEntity, JobLogEntity } from '../../../common'
 import type { AppConfig } from '../../../config/config'
-import { parsePagination } from '../../../core/validation'
+import { pageResult, parsePagination } from '../../../core/validation'
 import { formatTime, logInfo } from '../../../utils'
 import type { ExcelService } from '../../common/excel/excel.service'
-import type { QueryParams } from '../utils'
 
-type JobCallable = (...args: unknown[]) => unknown
-type JobServiceTarget = Record<string, JobCallable | unknown>
+type JobQuery = Record<string, unknown>
+
+export type JobCallable = (...args: unknown[]) => unknown
+export type JobServiceTarget = object
+export type JobServiceConfig<T extends object = object> = { service: T; methods?: string[] }
 type RegisteredJobService = { service: JobServiceTarget; methods: Set<string> }
 type InvokeResult = { serviceName: string; funName: string; argumentsArray: unknown[]; service: JobServiceTarget }
+interface LegacyRepeatableQueue {
+  getRepeatableJobs?: () => Promise<Array<{ key: string }>>
+  removeRepeatableByKey?: (key: string) => Promise<unknown>
+}
 const EXPORT_LIMIT = 5000
 
 export class JobService {
@@ -32,12 +38,12 @@ export class JobService {
     this.worker.on('failed', async (job, error) => {
       if (job?.data) await this.createJobLog(job.data, error.message || '执行定时任务失败', CommonConstant.STATUS_DISABLE)
     })
-    this.registerService('JobService', this as unknown as JobServiceTarget, ['test'])
+    this.registerService('JobService', this, ['test'])
   }
 
   public registerService(name: string, service: JobServiceTarget, methods?: string[]): void
-  public registerService(services: Record<string, JobServiceTarget | { service: JobServiceTarget; methods?: string[] }>): void
-  public registerService(nameOrServices: string | Record<string, JobServiceTarget | { service: JobServiceTarget; methods?: string[] }>, service?: JobServiceTarget, methods?: string[]) {
+  public registerService(services: Record<string, JobServiceTarget | JobServiceConfig>): void
+  public registerService(nameOrServices: string | Record<string, JobServiceTarget | JobServiceConfig>, service?: JobServiceTarget, methods?: string[]) {
     if (typeof nameOrServices === 'string') {
       if (service) this.serviceMap.set(nameOrServices, this.createRegisteredService(service, methods))
       return
@@ -49,8 +55,9 @@ export class JobService {
   }
 
   public async initJobs() {
-    const repeatableJobs = await ((this.queue as any).getRepeatableJobs?.() ?? Promise.resolve([])).catch(() => [])
-    await Promise.all(repeatableJobs.map((item: { key: string }) => (this.queue as any).removeRepeatableByKey?.(item.key)?.catch(() => undefined)))
+    const legacyQueue = this.queue as Queue<JobEntity> & LegacyRepeatableQueue
+    const repeatableJobs = await (legacyQueue.getRepeatableJobs?.() ?? Promise.resolve([])).catch(() => [])
+    await Promise.all(repeatableJobs.map((item) => legacyQueue.removeRepeatableByKey?.(item.key)?.catch(() => undefined)))
     const schedulers = await this.queue.getJobSchedulers().catch(() => [])
     await Promise.all(schedulers.map((item) => this.queue.removeJobScheduler(item.key).catch(() => undefined)))
     await this.queue.clean(0, 1000, 'delayed').catch(() => [])
@@ -91,14 +98,14 @@ export class JobService {
     return '更新成功'
   }
 
-  public async jobList(query: QueryParams) {
+  public async jobList(query: JobQuery) {
     const page = parsePagination(query)
     const where: FindOptionsWhere<JobEntity> = {}
     if (query.jobName) where.jobName = Like(`%${query.jobName}%`)
     if (query.jobGroup) where.jobGroup = Like(`%${query.jobGroup}%`)
-    if (query.status) where.status = Equal(query.status)
+    if (query.status) where.status = Equal(String(query.status))
     const [records, total] = await this.jobRepository.findAndCount({ where, skip: page.skip, take: page.take, order: { createTime: 'ASC' } })
-    return { records, list: records, total }
+    return pageResult(records, total)
   }
 
   public jobDetail(jobId: string) {
@@ -136,11 +143,11 @@ export class JobService {
     return '删除成功'
   }
 
-  public async jobLogList(query: QueryParams) {
+  public async jobLogList(query: JobQuery) {
     const page = parsePagination(query)
     const where = this.createJobLogWhere(query)
     const [records, total] = await this.jobLogRepository.findAndCount({ where, skip: page.skip, take: page.take, order: { createTime: 'DESC' } })
-    return { records, list: records, total }
+    return pageResult(records, total)
   }
 
   public async deleteJobLog(ids: string[]) {
@@ -153,7 +160,7 @@ export class JobService {
     return '清空成功'
   }
 
-  public async exportJobLog(query: QueryParams = {}) {
+  public async exportJobLog(query: JobQuery = {}) {
     const where = this.createJobLogWhere(query)
     const records = await this.jobLogRepository.find({ where, order: { createTime: 'DESC' }, take: EXPORT_LIMIT })
     return this.excelService.exportResponse(records as unknown as Record<string, unknown>[], `任务调度日志-${Date.now()}.xlsx`, 'joblog')
@@ -234,11 +241,11 @@ export class JobService {
     return 'service' in value && typeof value.service === 'object'
   }
 
-  private createJobLogWhere(query: QueryParams) {
+  private createJobLogWhere(query: JobQuery) {
     const where: FindOptionsWhere<JobLogEntity> = {}
     if (query.jobName) where.jobName = Like(`%${query.jobName}%`)
     if (query.jobGroup) where.jobGroup = Like(`%${query.jobGroup}%`)
-    if (query.status) where.status = Equal(query.status)
+    if (query.status) where.status = Equal(String(query.status))
     return where
   }
 

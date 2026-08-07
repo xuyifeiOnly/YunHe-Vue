@@ -1,14 +1,14 @@
 import { readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import type { AppLike, RouteModule } from '../routes/meta'
 
-export async function registerModuleRoutes(app: any) {
+export async function registerModuleRoutes(app: AppLike) {
   const routeFiles = scanRouteFiles(join(process.cwd(), 'src/modules'))
 
   for (const file of routeFiles) {
-    const mod = await import(pathToFileURL(file).href)
-    const register = mod.registerRoutes as ((app: any) => void | Promise<void>) | undefined
-    if (typeof register === 'function') await register(app)
+    const mod = (await import(pathToFileURL(file).href)) as RouteModule
+    if (typeof mod.registerRoutes === 'function') await mod.registerRoutes(app)
   }
 }
 

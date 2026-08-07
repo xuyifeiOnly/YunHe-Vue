@@ -2,7 +2,16 @@ import { Equal, In, Like, Not, type FindOptionsWhere, type Repository } from 'ty
 import { BusinessException, CommonConstant, RedisConstant, RoleEntity, UserEntity } from '../../../common'
 import { encryptPassword, formatTime, isValidEmail, isValidPhone, validate, verifyPassword } from '../../../utils'
 import type { RedisService } from '../../../shared/redis.service'
-import { parsePagination } from '../../../core/validation'
+import { pageResult, parseIds, parsePagination } from '../../../core/validation'
+import type {
+  AssignRolesBody,
+  CreateUserBody,
+  ResetUserPasswordBody,
+  UpdateUserBody,
+  UpdateUserPasswordBody,
+  UpdateUserProfileBody,
+  UserListQuery,
+} from './user.dto'
 
 export class UserService {
   constructor(
@@ -13,14 +22,16 @@ export class UserService {
     
   }
 
-  public async findList(query: Record<string, string | undefined>) {
+  public async findList(query: UserListQuery) {
     const page = parsePagination(query)
     const where: FindOptionsWhere<UserEntity> = {}
     if (query.username) where.username = Like(`%${query.username}%`)
+    if (query.nickname) where.nickname = Like(`%${query.nickname}%`)
     if (query.phone) where.phone = Like(`%${query.phone}%`)
     if (query.status) where.status = query.status
     const [list, total] = await this.userRepository.findAndCount({ where, relations: { roles: true }, skip: page.skip, take: page.take, order: { createTime: 'DESC' } })
-    return { list: list.map((item) => this.omitPassword(item)), records: list.map((item) => this.omitPassword(item)), total }
+    const records = list.map((item) => this.omitPassword(item))
+    return pageResult(records, total)
   }
 
   public async findOneById(userId: string) {
@@ -33,8 +44,8 @@ export class UserService {
     return this.userRepository.findOne({ where: { username, status: CommonConstant.STATUS_NORMAL }, relations: { roles: true } })
   }
 
-  public async create(data: Partial<UserEntity> & { roleIds?: string[] }) {
-    validate(data as Record<string, unknown>, [
+  public async create(data: CreateUserBody) {
+    validate(data, [
       { field: 'username', label: '用户名', required: true, min: 2, max: 20 },
       { field: 'password', label: '密码', required: true, min: 6 },
       { field: 'phone', label: '手机号', pattern: /^1[3-9]\d{9}$/, validator: (v) => (v && !isValidPhone(String(v)) ? '手机号格式不正确' : undefined) },
@@ -42,13 +53,13 @@ export class UserService {
     ])
     await this.validateUserFields(data)
     const user = this.userRepository.create(data)
-    user.password = await encryptPassword(data.password!)
+    user.password = await encryptPassword(data.password)
     user.roles = data.roleIds?.length ? await this.roleRepository.findBy({ id: In(data.roleIds) }) : []
     await this.userRepository.save(user)
     return '添加成功'
   }
 
-  public async update(data: Partial<UserEntity> & { roleIds?: string[] }) {
+  public async update(data: UpdateUserBody) {
     if (!data.id) throw new BusinessException('用户ID不能为空')
     const user = await this.userRepository.findOne({ where: { id: data.id }, relations: { roles: true } })
     if (!user) throw new BusinessException('该用户不存在')
@@ -62,8 +73,7 @@ export class UserService {
   }
 
   public async delete(ids: string) {
-    let idList = ids.split(',').filter(Boolean)
-    if (!idList.length) throw new BusinessException('用户ID不能为空')
+    const idList = parseIds(ids, '用户ID')
     if (idList.includes(CommonConstant.ADMIN_USER_ID)) throw new BusinessException('管理员账号无法被删除')
     const users = await this.userRepository.find({ where: { id: In(idList) }, relations: { roles: true } })
     for (const user of users) {
@@ -79,7 +89,7 @@ export class UserService {
     await this.userRepository.update(userId, { loginTime: formatTime() })
   }
 
-  public async updatePassword(userId: string, updateDto: { oldPassword?: string; oldPwd?: string; newPassword?: string; newPwd?: string; repeatPassword?: string; confirmPassword?: string }) {
+  public async updatePassword(userId: string, updateDto: UpdateUserPasswordBody) {
     const oldPassword = updateDto.oldPassword ?? updateDto.oldPwd ?? ''
     const newPassword = updateDto.newPassword ?? updateDto.newPwd ?? ''
     const repeatPassword = updateDto.repeatPassword ?? updateDto.confirmPassword ?? newPassword
@@ -100,14 +110,14 @@ export class UserService {
     return { user, roles, roleIds: user.roles?.map((role) => role.id) ?? [] }
   }
 
-  public async updateProfile(userId: string, data: Partial<UserEntity>) {
+  public async updateProfile(userId: string, data: UpdateUserProfileBody) {
     await this.validateUserFields({ ...data, id: userId }, userId)
     await this.userRepository.update(userId, { nickname: data.nickname, phone: data.phone, email: data.email, gender: data.gender })
     await this.cleanUserRelatedCache(userId)
     return '修改成功'
   }
 
-  public async resetPassword(data: { username?: string; id?: string; password?: string }) {
+  public async resetPassword(data: ResetUserPasswordBody) {
     if (!data.password) throw new BusinessException('新密码不能为空')
     const where: FindOptionsWhere<UserEntity>[] = []
     if (data.id) where.push({ id: Equal(data.id) })
@@ -121,7 +131,7 @@ export class UserService {
     return '密码重置成功，请重新登录'
   }
 
-  public async assignRoles(data: { userId?: string; id?: string; roleIds?: string[] }) {
+  public async assignRoles(data: AssignRolesBody) {
     const userId = data.userId ?? data.id
     if (!userId) throw new BusinessException('用户ID不能为空')
     const user = await this.userRepository.findOne({ where: { id: userId }, relations: { roles: true } })
@@ -143,7 +153,7 @@ export class UserService {
     if (keys.length) await this.redisService.del(...keys)
   }
 
-  private async validateUserFields(data: Partial<UserEntity>, userId?: string) {
+  private async validateUserFields(data: { id?: string; username?: string; phone?: string; email?: string }, userId?: string) {
     if (data.username) {
       const where: FindOptionsWhere<UserEntity> = { username: Equal(data.username) }
       if (userId) where.id = Not(userId)

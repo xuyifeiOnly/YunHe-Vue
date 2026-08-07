@@ -22,9 +22,10 @@ export interface ValidationRule {
  *   { field: 'email', label: '邮箱', pattern: /^[\w.+-]+@[\w-]+\.[\w.-]+$/ },
  * ])
  */
-export function validate(data: Record<string, unknown>, rules: ValidationRule[]): void {
+export function validate(data: object, rules: ValidationRule[]): void {
+  const source = data as Record<string, unknown>
   for (const rule of rules) {
-    const value = data[rule.field]
+    const value = source[rule.field]
     const label = rule.label ?? rule.field
     if (rule.required && (value === undefined || value === null || value === '')) {
       throw new BusinessException(`${label}不能为空`)
@@ -46,16 +47,17 @@ export function validate(data: Record<string, unknown>, rules: ValidationRule[])
       throw new BusinessException(`${label}格式不正确`)
     }
     if (rule.validator) {
-      const msg = rule.validator(value, data)
+      const msg = rule.validator(value, source)
       if (msg) throw new BusinessException(msg)
     }
   }
 }
 
 /** 校验必填字段 */
-export function validateRequired(data: Record<string, unknown>, fields: string[], labels?: Record<string, string>): void {
+export function validateRequired(data: object, fields: string[], labels?: Record<string, string>): void {
+  const source = data as Record<string, unknown>
   for (const field of fields) {
-    const value = data[field]
+    const value = source[field]
     if (value === undefined || value === null || value === '') {
       throw new BusinessException(`${labels?.[field] ?? field}不能为空`)
     }

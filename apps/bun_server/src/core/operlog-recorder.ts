@@ -2,10 +2,12 @@ import { CommonConstant, OperLogEntity } from '../common'
 import { BusinessType } from '../entities/monitor/operlog.entity'
 import { getRouteMeta } from '../routes/meta'
 import { formatTime, getLocationByIP, logError } from '../utils'
+import { getContextPath, type AppRequestContext } from './app-context'
 import { getClientIp } from './auth-hook'
 
-export async function recordOperlog(context: any, result: unknown, success: boolean) {
-  const routeMeta = getRouteMeta(context.request.method, context.path)
+export async function recordOperlog(context: AppRequestContext, result: unknown, success: boolean) {
+  const path = getContextPath(context)
+  const routeMeta = getRouteMeta(context.request.method, path)
   if (!routeMeta?.operLog) return
   const response = result instanceof Response ? result : undefined
   const skipTransform = routeMeta.skipTransform || response?.headers.get('content-type')?.includes('text/event-stream') || response?.headers.get('content-disposition')
@@ -17,10 +19,10 @@ export async function recordOperlog(context: any, result: unknown, success: bool
   record.username = context.user?.username ?? ''
   record.params = await buildParams(context.request)
   record.status = status
-  record.url = context.path
+  record.url = path
   record.businessType = (routeMeta.operLog.businessType ?? BusinessType.OTHER) as BusinessType
   record.requestMethod = context.request.method.toUpperCase()
-  record.method = `${context.request.method.toUpperCase()} ${context.path}`
+  record.method = `${context.request.method.toUpperCase()} ${path}`
   record.ip = getClientIp(context.request, context.server)
   record.location = await getLocationByIP(record.ip)
   record.operTime = formatTime()
