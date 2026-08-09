@@ -18,7 +18,7 @@ import { errorResponse, successResponse } from './src/core/response'
 import { applySecurityHeaders } from './src/core/security'
 import { createServices } from './src/core/create-services'
 import type { AppRequestContext } from './src/core/app-context'
-import { logInfo } from './src/utils'
+import { logError, logInfo } from './src/utils'
 
 const config = loadConfig()
 const uploadRoot = join(process.cwd(), 'uploads')
@@ -72,9 +72,14 @@ const app = new Elysia()
   })
   .onError((context) => {
     const ctx = context as unknown as AppRequestContext & { error: unknown }
-    const { error, set, requestId } = ctx
+    const { error, set, requestId, request } = ctx
     if (error instanceof BusinessException) set.status = error.status
     else set.status = 500
+    logError('请求处理失败', error, {
+      requestId,
+      method: request.method,
+      url: request.url,
+    })
     void recordOperlog(ctx, error, false)
     return errorResponse(error, requestId ?? crypto.randomUUID())
   })

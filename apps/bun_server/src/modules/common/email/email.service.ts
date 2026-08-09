@@ -3,17 +3,16 @@ import { join } from 'node:path'
 import nodemailer from 'nodemailer'
 import type SMTPTransport from 'nodemailer/lib/smtp-transport'
 import type { AppConfig } from '../../../config/config'
+import { CommonConstant } from '../../../common'
 
 export class EmailService {
   private readonly transporter: nodemailer.Transporter | null
-  private readonly templateRoot = join(
-    process.cwd(),
-    'public',
-    'template',
-    'email',
-  )
+  private readonly templateRoot: string
 
   constructor(config: AppConfig) {
+    const templateDir =
+      Bun.env.NODE_ENV === 'development' ? 'public/template' : 'template'
+    this.templateRoot = join(process.cwd(), templateDir, 'email')
     const email = config.email as SMTPTransport.Options | undefined
     this.transporter = email?.host ? nodemailer.createTransport(email) : null
   }
@@ -30,7 +29,11 @@ export class EmailService {
     return { success: true }
   }
 
-  public sendCaptchaMail(to: string, code: string, expiresIn = 5) {
+  public sendCaptchaMail(
+    to: string,
+    code: string,
+    expiresIn = CommonConstant.EMAIL_CAPTCHA_EXPIRES_IN,
+  ) {
     return this.sendMail({
       to,
       subject: '账号安全验证',
@@ -54,7 +57,11 @@ export class EmailService {
     })
   }
 
-  public sendCaptcha(to: string, code: string, expiresIn = 5) {
+  public sendCaptcha(
+    to: string,
+    code: string,
+    expiresIn = CommonConstant.EMAIL_CAPTCHA_EXPIRES_IN,
+  ) {
     return this.sendCaptchaMail(to, code, expiresIn)
   }
 

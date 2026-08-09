@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { load as loadYaml } from 'js-yaml'
+import { CommonConstant } from '../common'
 
 export interface AppConfig {
   server: {
@@ -75,7 +76,10 @@ function applyEnvConfig(config: AppConfig): AppConfig {
     jwt: {
       ...config.jwt,
       secret: stringEnv('JWT_SECRET', config.jwt.secret),
-      expiresIn: numberEnv('JWT_EXPIRES_IN', config.jwt.expiresIn),
+      expiresIn: numberEnv(
+        'JWT_EXPIRES_IN',
+        config.jwt.expiresIn || CommonConstant.LOGIN_EXPIRES_IN,
+      ),
     },
     email: {
       ...config.email,

@@ -1,3 +1,4 @@
+import { CommonConstant } from '../common'
 import type { RouteHandler } from '../core/route-context'
 
 export interface RouteMeta {
@@ -108,6 +109,8 @@ function normalizeRouteMeta(meta: RouteMeta): RouteMeta {
     demoProtect: meta.demoProtect ?? (method !== 'GET' && !meta.public),
     repeatSubmit:
       meta.repeatSubmit ??
-      (['POST', 'PUT', 'DELETE'].includes(method) ? { interval: 5 } : false),
+      (['POST', 'PUT', 'DELETE'].includes(method)
+        ? { interval: CommonConstant.REPEAT_SUBMIT_INTERVAL }
+        : false),
   }
 }

@@ -1,11 +1,9 @@
 import { randomUUID } from 'node:crypto'
 import svgCaptcha from 'svg-captcha'
-import { BusinessException, RedisConstant } from '../common'
+import { BusinessException, CommonConstant, RedisConstant } from '../common'
 import type { RedisService } from './redis.service'
 
 export class CaptchaService {
-  private readonly CAPTCHA_EXPIRES_IN = 60
-
   constructor(private readonly redisService: RedisService) {}
 
   public async create(): Promise<{ uuid: string; captcha: string }> {
@@ -19,7 +17,7 @@ export class CaptchaService {
       `${RedisConstant.CAPTCHA_KEY}:${uuid}`,
       text,
       'EX',
-      this.CAPTCHA_EXPIRES_IN,
+      CommonConstant.CAPTCHA_EXPIRES_IN,
     )
     return { uuid, captcha }
   }

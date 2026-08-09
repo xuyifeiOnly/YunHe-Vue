@@ -6,7 +6,10 @@ import { getRequestIp } from '../utils/ip.util'
 import { UserContext } from './user-context'
 
 interface AuthServices {
-  authService: { verifyToken(token: string): Promise<Omit<AuthUser, 'token'>> }
+  authService: {
+    verifyToken(token: string): Promise<Omit<AuthUser, 'token'>>
+    getInfo(userId: string): Promise<{ roles: string[]; permissions: string[] }>
+  }
   redisService: {
     get(key: string): Promise<string | null>
     // 与 ioredis set 重载保持兼容
@@ -18,10 +21,6 @@ interface AuthServices {
 }
 
 type AuthContext = AppRequestContext & { services: AuthServices }
-
-const THROTTLE_WINDOW_SECONDS = 10
-const THROTTLE_LIMIT = 10
-const THROTTLE_LOCK_SECONDS = 30 * 60
 
 export async function authHook(context: AuthContext) {
   const routeMeta = getRouteMeta(
@@ -76,8 +75,8 @@ export async function setResponseCache(
     return
   const ttl =
     typeof routeMeta.responseCache === 'object'
-      ? (routeMeta.responseCache.ttl ?? 60)
-      : 60
+      ? (routeMeta.responseCache.ttl ?? CommonConstant.RESPONSE_CACHE_TTL)
+      : CommonConstant.RESPONSE_CACHE_TTL
   await context.services.redisService.set(
     await getResponseCacheKey(context),
     JSON.stringify(response),
@@ -98,14 +97,14 @@ async function checkThrottle(context: AuthContext) {
   if (current === 1)
     await context.services.redisService.expire(
       throttleKey,
-      THROTTLE_WINDOW_SECONDS,
+      CommonConstant.THROTTLE_WINDOW_SECONDS,
     )
-  if (current > THROTTLE_LIMIT) {
+  if (current > CommonConstant.THROTTLE_LIMIT) {
     await context.services.redisService.set(
       lockKey,
       '1',
       'EX',
-      THROTTLE_LOCK_SECONDS,
+      CommonConstant.THROTTLE_LOCK_SECONDS,
     )
     throw new BusinessException('请求过于频繁，请稍后再试', 429)
   }
@@ -150,7 +149,9 @@ async function checkRepeatSubmit(
   if (await context.services.redisService.get(key))
     throw new BusinessException('不允许重复提交，请稍后再试')
   const interval =
-    typeof repeatSubmit === 'object' ? (repeatSubmit.interval ?? 5) : 5
+    typeof repeatSubmit === 'object'
+      ? (repeatSubmit.interval ?? CommonConstant.REPEAT_SUBMIT_INTERVAL)
+      : CommonConstant.REPEAT_SUBMIT_INTERVAL
   await context.services.redisService.set(key, '1', 'EX', interval)
 }
 
@@ -162,24 +163,32 @@ async function checkPermission(
   if (!permissions?.length && !roles?.length) return
   const userId = context.user?.userId
   if (!userId) throw new BusinessException('登录状态已失效，请重新登录', 401)
-  const [permissionValue, roleValue] = await Promise.all([
-    context.services.redisService.get(
-      `${RedisConstant.ADMIN_USER_PERMISSIONS}:${userId}`,
-    ),
-    context.services.redisService.get(
-      `${RedisConstant.ADMIN_USER_ROLES}:${userId}`,
-    ),
-  ])
-  const userRoles = parseCacheList(roleValue)
+  if (userId === CommonConstant.ADMIN_USER_ID) return
+  const { userRoles, userPermissions } = await getUserAccess(context, userId)
   if (userRoles.includes(CommonConstant.ADMIN_ROLE_CODE)) return
   const hasRole =
     !roles?.length || roles.some((role) => userRoles.includes(role))
-  const userPermissions = parseCacheList(permissionValue)
   const hasPermission =
     !permissions?.length ||
     permissions.some((permission) => userPermissions.includes(permission))
   if (!hasRole || !hasPermission)
     throw new BusinessException('没有操作权限', 403)
+}
+
+async function getUserAccess(context: AuthContext, userId: string) {
+  const [permissionValue, roleValue] = await Promise.all([
+    context.services.redisService.get(
+      `${RedisConstant.ADMIN_USER_PERMISSIONS}:${userId}`,
+    ),
+    context.services.redisService.get(`${RedisConstant.ADMIN_USER_ROLES}:${userId}`),
+  ])
+  if (permissionValue && roleValue)
+    return {
+      userRoles: parseCacheList(roleValue),
+      userPermissions: parseCacheList(permissionValue),
+    }
+  const info = await context.services.authService.getInfo(userId)
+  return { userRoles: info.roles, userPermissions: info.permissions }
 }
 
 function parseCacheList(value: string | null) {

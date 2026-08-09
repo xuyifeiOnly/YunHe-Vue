@@ -9,7 +9,7 @@ import {
 import { rm, writeFile } from 'node:fs/promises'
 import { extname, resolve } from 'node:path'
 import { pipeline } from 'node:stream/promises'
-import { BusinessException } from '../../../common'
+import { BusinessException, CommonConstant } from '../../../common'
 
 const ALLOWED_EXTENSIONS = new Set([
   '.jpg',
@@ -33,7 +33,7 @@ export class UploadService {
   public async uploadFile(file: File | undefined) {
     if (!file) throw new BusinessException('上传文件不能为空')
     this.validateFileName(file.name)
-    if (file.size > 10 * 1024 * 1024)
+    if (file.size > CommonConstant.UPLOAD_FILE_SIZE_LIMIT)
       throw new BusinessException('文件大于10MB，请使用分片上传')
     const buffer = Buffer.from(await file.arrayBuffer())
     const hash = await this.createSha256(buffer)
@@ -78,7 +78,7 @@ export class UploadService {
     chunkHash?: string,
   ) {
     if (!file || !hash) throw new BusinessException('分片参数不完整')
-    if (file.size > 10 * 1024 * 1024)
+    if (file.size > CommonConstant.UPLOAD_FILE_SIZE_LIMIT)
       throw new BusinessException('单个分片不能超过10MB')
     this.validateHash(hash)
     const chunkName = this.getSafeChunkName(
