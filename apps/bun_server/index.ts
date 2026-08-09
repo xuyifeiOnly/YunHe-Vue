@@ -54,6 +54,7 @@ const app = new Elysia()
     const ctx = context as unknown as AppRequestContext
     if (ctx.path?.startsWith('/uploads/')) return
     applySecurityHeaders(ctx.set.headers)
+    
     ctx.set.headers[CommonConstant.REQUEST_ID_HEADER] = ctx.requestId
     ctx.startTime = Date.now()
     const cached = await getResponseCache(ctx)
@@ -88,17 +89,28 @@ const api = new Elysia({ prefix })
 await registerModuleRoutes(api)
 
 app.use(api)
-app.listen(config.server.port)
+const server = app.listen(config.server.port)
 
-async function shutdown() {
-  await services.jobService.shutdown()
-  await services.redisService.quit()
-  if (dataSource.isInitialized) await dataSource.destroy()
-  process.exit(0)
+let isShuttingDown = false
+async function shutdown(signal: string) {
+  if (isShuttingDown) return
+  isShuttingDown = true
+  logInfo(`收到 ${signal} 信号，正在关闭服务...`)
+  try {
+    // 先停止接收新请求，释放端口
+    await app.stop()
+    await services.jobService.shutdown()
+    await services.redisService.quit()
+    if (dataSource.isInitialized) await dataSource.destroy()
+  } catch (error) {
+    logError('服务关闭异常', error)
+  } finally {
+    process.exit(0)
+  }
 }
 
-process.on('SIGINT', () => void shutdown())
-process.on('SIGTERM', () => void shutdown())
+process.on('SIGINT', () => void shutdown('SIGINT'))
+process.on('SIGTERM', () => void shutdown('SIGTERM'))
 
 logInfo(
   `Bun + Elysia 服务已启动：http://localhost:${config.server.port}${prefix}`,

@@ -4,13 +4,34 @@ import { logError, logInfo } from '../utils'
 
 export class RedisService {
   private readonly redisClient: Redis
+  private ready = false
 
   constructor(config: AppConfig) {
-    const redisConfig: RedisOptions = config.redis
+    const redisConfig: RedisOptions = {
+      ...config.redis,
+      // 每 30 秒发送 TCP keepalive 探测，防止远程 Redis 或中间网络设备清理空闲连接
+      keepAlive: 30,
+      connectTimeout: 10000,
+    }
     this.redisClient = new Redis(redisConfig)
-    this.redisClient.on('connect', () => logInfo('Redis 连接成功'))
-    this.redisClient.on('ready', () => logInfo('Redis 已准备就绪'))
-    this.redisClient.on('error', (error) => logError('Redis 连接失败', error))
+    // ready 事件代表认证完成、可执行命令，才是真正的"连接成功"
+    this.redisClient.on('ready', () => {
+      if (!this.ready) {
+        this.ready = true
+        logInfo('Redis 连接成功')
+      }
+    })
+    this.redisClient.on('end', () => {
+      if (this.ready) {
+        this.ready = false
+        logError('Redis 连接断开')
+      }
+    })
+    this.redisClient.on('error', (error) => {
+      // 连接失败直接退出程序，并抛出具体错误
+      logError('Redis 连接失败', error)
+      process.exit(1)
+    })
   }
 
   public get client() {

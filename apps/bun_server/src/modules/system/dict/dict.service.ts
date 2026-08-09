@@ -118,7 +118,8 @@ export class DictService {
   }
 
   public async createData(data: Partial<DictDataEntity>) {
-    await this.validateData(data)
+    const type = await this.validateData(data)
+    data.dictTypeId = type.id
     await this.dictDataRepository.save(this.dictDataRepository.create(data))
     await this.clearCache(data.dictType!)
     return '创建成功'
@@ -127,7 +128,8 @@ export class DictService {
   public async updateData(data: Partial<DictDataEntity>) {
     if (!data.id) throw new BusinessException('字典数据ID不能为空')
     const oldData = await this.findDataDetail(data.id)
-    await this.validateData(data)
+    const type = await this.validateData(data)
+    data.dictTypeId = type.id
     await this.dictDataRepository.update(data.id, data)
     await this.clearCache(oldData.dictType)
     if (data.dictType && data.dictType !== oldData.dictType)
@@ -180,5 +182,6 @@ export class DictService {
       dictType: data.dictType,
     })
     if (!type) throw new BusinessException(`字典类型 ${data.dictType} 不存在`)
+    return type
   }
 }
