@@ -19,7 +19,7 @@ export function parseCommandStats(info: string) {
         return [key, Number(val) || val]
       }),
     )
-    return { name: name.replace('cmdstat_', ''), value: stat }
+    return { name: name.replace('cmdstat_', ''), value: Number(stat.calls) || 0 }
   })
 }
 

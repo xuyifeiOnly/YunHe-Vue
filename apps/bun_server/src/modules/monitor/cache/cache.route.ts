@@ -91,6 +91,7 @@ const routes = [
     path: "/monitor/cache/names/delete",
     description: "缓存名称删除",
     permissions: ["monitor:cache:delete"],
+    repeatSubmit: false,
     operLog: { title: "缓存监控", businessType: BusinessType.DELETE },
     handler: ({
       query,
@@ -105,6 +106,7 @@ const routes = [
     path: "/monitor/cache/keys/delete",
     description: "缓存键删除",
     permissions: ["monitor:cache:delete"],
+    repeatSubmit: false,
     operLog: { title: "缓存监控", businessType: BusinessType.DELETE },
     handler: ({ query, services }: RouteContext<unknown, CacheDetailQuery>) =>
       services.cacheService.deleteCacheKey(

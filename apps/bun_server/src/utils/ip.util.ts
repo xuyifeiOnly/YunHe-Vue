@@ -21,9 +21,7 @@ export function getRequestIp(
 }
 
 export function normalizeIp(ip: string): string {
-  return (
-    ip.replace('::ffff:', '').replace('::1', '127.0.0.1').trim() || 'unknown'
-  )
+  return ip.replace('::ffff:', '').replace('::1', '127.0.0.1').trim() || '127.0.0.1'
 }
 
 /**

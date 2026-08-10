@@ -54,7 +54,6 @@ const app = new Elysia()
     const ctx = context as unknown as AppRequestContext
     if (ctx.path?.startsWith('/uploads/')) return
     applySecurityHeaders(ctx.set.headers)
-    
     ctx.set.headers[CommonConstant.REQUEST_ID_HEADER] = ctx.requestId
     ctx.startTime = Date.now()
     const cached = await getResponseCache(ctx)
@@ -98,7 +97,7 @@ async function shutdown(signal: string) {
   logInfo(`收到 ${signal} 信号，正在关闭服务...`)
   try {
     // 先停止接收新请求，释放端口
-    await app.stop()
+    server.stop(true)
     await services.jobService.shutdown()
     await services.redisService.quit()
     if (dataSource.isInitialized) await dataSource.destroy()
