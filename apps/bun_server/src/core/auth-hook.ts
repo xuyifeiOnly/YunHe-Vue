@@ -17,7 +17,7 @@ interface AuthServices {
     incr(key: string): Promise<number>
     expire(key: string, seconds: number): Promise<unknown>
   }
-  config?: { server?: { isDemo?: boolean } }
+  config?: { server?: { isDemo?: boolean; trustProxy?: boolean } }
 }
 
 type AuthContext = AppRequestContext & { services: AuthServices }
@@ -86,10 +86,15 @@ export async function setResponseCache(
 }
 
 async function checkThrottle(context: AuthContext) {
-  const clientIp = getClientIp(context.request, context.server)
+  const clientIp = getClientIp(
+    context.request,
+    context.server,
+    context.services.config?.server?.trustProxy,
+  )
+  const method = context.request.method.toUpperCase()
   const path = getContextPath(context)
   const pathKey = path.replace(/[^a-zA-Z0-9:_-]/g, '_')
-  const throttleKey = `${RedisConstant.THROTTLE_LIMIT}:${clientIp}:${pathKey}`
+  const throttleKey = `${RedisConstant.THROTTLE_LIMIT}:${clientIp}:${method}:${pathKey}`
   const lockKey = `${throttleKey}:lock`
   if (await context.services.redisService.get(lockKey))
     throw new BusinessException('请求过于频繁，请稍后再试', 429)
@@ -141,7 +146,11 @@ async function checkRepeatSubmit(
     .catch(() => '')
   const token =
     context.request.headers.get(CommonConstant.AUTHORIZATION) ??
-    getClientIp(context.request, context.server)
+    getClientIp(
+      context.request,
+      context.server,
+      context.services.config?.server?.trustProxy,
+    )
   const hash = await sha256(
     `${context.request.method}:${getContextPath(context)}:${token}:${body}`,
   )
@@ -204,8 +213,9 @@ function parseCacheList(value: string | null) {
 export function getClientIp(
   request: Request,
   server?: AppRequestContext['server'],
+  trustProxy = false,
 ) {
-  return getRequestIp(request, server)
+  return getRequestIp(request, server, trustProxy)
 }
 
 async function getResponseCacheKey(context: AuthContext) {

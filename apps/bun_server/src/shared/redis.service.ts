@@ -28,9 +28,7 @@ export class RedisService {
       }
     })
     this.redisClient.on('error', (error) => {
-      // 连接失败直接退出程序，并抛出具体错误
-      logError('Redis 连接失败', error)
-      process.exit(1)
+      logError(this.ready ? 'Redis 运行异常' : 'Redis 连接失败', error)
     })
   }
 

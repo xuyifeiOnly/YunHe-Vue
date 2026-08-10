@@ -36,7 +36,11 @@ export async function recordOperlog(
     BusinessType.OTHER) as BusinessType
   record.requestMethod = context.request.method.toUpperCase()
   record.method = `${context.request.method.toUpperCase()} ${path}`
-  record.ip = getClientIp(context.request, context.server)
+  record.ip = getClientIp(
+    context.request,
+    context.server,
+    context.services.config.server.trustProxy,
+  )
   record.location = await getLocationByIP(record.ip)
   record.operTime = formatTime()
   await context.services.logService

@@ -3,6 +3,7 @@ server:
   port: 3000
   globalPrefix: 'api'
   isDemo: false
+  trustProxy: false
   corsOrigins:
     - 'http://localhost:5173'
     - 'http://127.0.0.1:5173'

@@ -3,11 +3,14 @@ import { join } from 'node:path'
 import { load as loadYaml } from 'js-yaml'
 import { CommonConstant } from '../common'
 
+const DEFAULT_JWT_SECRET = 'please-change-me'
+
 export interface AppConfig {
   server: {
     port: number
     globalPrefix: string
     isDemo: boolean
+    trustProxy: boolean
     corsOrigins: string[]
   }
   database: {
@@ -44,6 +47,7 @@ export function loadConfig(): AppConfig {
   const filePath = existsSync(localPath) ? localPath : configPath
   const config = loadYaml(readFileSync(filePath, 'utf8')) as AppConfig
   appConfig = applyEnvConfig(config)
+  validateConfig(appConfig)
   return appConfig
 }
 
@@ -55,6 +59,7 @@ function applyEnvConfig(config: AppConfig): AppConfig {
       port: numberEnv('SERVER_PORT', config.server.port),
       globalPrefix: stringEnv('SERVER_GLOBAL_PREFIX', config.server.globalPrefix),
       isDemo: booleanEnv('SERVER_IS_DEMO', config.server.isDemo),
+      trustProxy: booleanEnv('SERVER_TRUST_PROXY', config.server.trustProxy ?? false),
       corsOrigins: listEnv('SERVER_CORS_ORIGINS', config.server.corsOrigins ?? []),
     },
     database: {
@@ -98,6 +103,12 @@ function applyEnvConfig(config: AppConfig): AppConfig {
       maxTokens: numberEnv('OPENAI_MAX_TOKENS', config.openai.maxTokens),
     },
   }
+}
+
+function validateConfig(config: AppConfig) {
+  const isProduction = Bun.env.NODE_ENV === 'production'
+  if (isProduction && config.jwt.secret === DEFAULT_JWT_SECRET)
+    throw new Error('生产环境必须通过 JWT_SECRET 配置安全的 JWT 密钥')
 }
 
 function stringEnv(key: string, defaultValue = '') {

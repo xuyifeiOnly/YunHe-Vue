@@ -52,9 +52,9 @@ const app = new Elysia()
   )
   .onBeforeHandle(async (context) => {
     const ctx = context as unknown as AppRequestContext
-    if (ctx.path?.startsWith('/uploads/')) return
     applySecurityHeaders(ctx.set.headers)
     ctx.set.headers[CommonConstant.REQUEST_ID_HEADER] = ctx.requestId
+    if (ctx.path?.startsWith('/uploads/')) return
     ctx.startTime = Date.now()
     const cached = await getResponseCache(ctx)
     if (cached) return JSON.parse(cached)

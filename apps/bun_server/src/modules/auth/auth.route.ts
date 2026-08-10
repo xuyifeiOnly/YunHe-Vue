@@ -40,7 +40,7 @@ const routes = [
       services,
     }: RouteContext<LoginBody>) =>
       services.authService.login(body, {
-        ip: getClientIp(request, server),
+        ip: getClientIp(request, server, services.config.server.trustProxy),
         userAgent: request.headers.get('user-agent') ?? '',
         requestId,
       }),

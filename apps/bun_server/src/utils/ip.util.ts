@@ -9,14 +9,14 @@ const searcher = newWithFileOnly(defaultDbFile)
 export function getRequestIp(
   request: Request,
   server?: { requestIP?: (request: Request) => { address?: string } | null },
+  trustProxy = false,
 ): string {
+  const remoteIp = server?.requestIP?.(request)?.address || ''
+  if (!trustProxy) return normalizeIp(remoteIp)
+
   const xForwardedFor = request.headers.get('x-forwarded-for')
   const xRealIp = request.headers.get('x-real-ip')
-  const ip =
-    xForwardedFor?.split(',')[0]?.trim() ||
-    xRealIp?.trim() ||
-    server?.requestIP?.(request)?.address ||
-    ''
+  const ip = xForwardedFor?.split(',')[0]?.trim() || xRealIp?.trim() || remoteIp
   return normalizeIp(ip)
 }
 
